@@ -1,0 +1,5 @@
+// MARK: - Button Titles
+
+"homeButtonTitle" = "Home";
+"historyButtonTitle" = "History";
+"settingsButtonTitle" = "Settings";
