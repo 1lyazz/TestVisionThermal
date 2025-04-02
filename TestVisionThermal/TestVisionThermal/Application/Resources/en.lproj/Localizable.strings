@@ -3,3 +3,11 @@
 "homeButtonTitle" = "Home";
 "historyButtonTitle" = "History";
 "settingsButtonTitle" = "Settings";
+"saveToGalleryButtonTitle" = "Save to Gallery";
+"okButtonTitle" = "OK";
+"settingsButtonTitle" = "Settings";
+
+// MARK: - Alerts
+
+"noPhotosAccessTitle" = "No Photos Access";
+"noPhotosAccessDescription" = "To save your photo, our app needs permission to access Photos.";

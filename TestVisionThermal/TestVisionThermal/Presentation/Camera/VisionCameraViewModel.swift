@@ -6,6 +6,8 @@ final class VisionCameraViewModel: ObservableObject {
     @Published var cameraSessionManager = CameraSessionManager()
     @Published var selectCameraType: CameraType = .photoCamera
     @Published var selectedFilter: CameraFilterType = .original
+    @Published var isDisableCameraButton: Bool = false
+    @Published var isFrontCamera: Bool = false
     private let coordinator: Coordinator
     private let hapticGen = HapticGen.shared
 
@@ -20,10 +22,31 @@ final class VisionCameraViewModel: ObservableObject {
     
     func tapOnCameraButton() {
         hapticGen.setUpHaptic()
+        isDisableCameraButton = true
+        
+        #if targetEnvironment(simulator)
+        coordinator.pushResultView(photo: .simulatorPhoto)
+        #else
+        DispatchQueue.main.async { [weak self] in
+            self?.cameraSessionManager.capturePhoto { [weak self] image in
+                guard let self = self else { return }
+        
+                if let image = image {
+                    self.coordinator.pushResultView(photo: image)
+                } else {
+                    self.coordinator.pushResultView(photo: .simulatorPhoto)
+                }
+                self.isDisableCameraButton = false
+            }
+        }
+        #endif
     }
     
     func tapOnFlipButton() {
         hapticGen.setUpHaptic()
+        isFrontCamera.toggle()
+        isFlashOn = false
+        cameraSessionManager.switchCamera()
     }
     
     func tapOnSegmentButton(cameraType: CameraType) {

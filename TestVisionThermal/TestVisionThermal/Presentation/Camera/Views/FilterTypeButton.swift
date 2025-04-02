@@ -12,9 +12,7 @@ struct FilterTypeButton: View {
                 .foregroundStyle(.white)
                 .padding(.vertical, 13)
                 .padding(.horizontal, 24)
-                .background(
-                    buttonBackground
-                )
+                .background(buttonBackground)
         }
         .frame(height: 44)
     }

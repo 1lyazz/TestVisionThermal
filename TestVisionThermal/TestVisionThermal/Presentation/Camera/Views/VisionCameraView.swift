@@ -24,6 +24,9 @@ struct VisionCameraView: View {
             }
         }
         .edgesIgnoringSafeArea(.all)
+        .onAppear {
+            viewModel.isDisableCameraButton = false
+        }
     }
     
     private var cameraHeader: some View {
@@ -44,6 +47,9 @@ struct VisionCameraView: View {
                     Spacer()
                     
                     CircleButton(icon: viewModel.isFlashOn ? .flashOnIcon : .flashOffIcon) { viewModel.tapOnFlashButton() }
+                        .opacity(viewModel.isFrontCamera ? 0 : 1)
+                        .animation(.default, value: viewModel.isFrontCamera)
+                        .transition(.opacity)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 2)
@@ -109,6 +115,10 @@ struct VisionCameraView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 8)
                 .frame(width: 74, height: 27)
+                .foregroundStyle(.black090909.opacity(0.7))
+            
+            RoundedRectangle(cornerRadius: 8)
+                .frame(width: 74, height: 27)
                 .foregroundStyle(
                     LinearGradient(
                         gradient: Gradient(stops: [
@@ -160,5 +170,6 @@ struct VisionCameraView: View {
                     .frame(width: 48, height: 48)
             }
         }
+        .disabled(viewModel.isDisableCameraButton)
     }
 }

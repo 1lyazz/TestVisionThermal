@@ -46,6 +46,10 @@ final class Coordinator: CoordinatorProtocol {
         pushHostingController(rootView: VisionCameraView(viewModel: .init(coordinator: self)))
     }
     
+    func pushResultView(photo: UIImage) {
+        pushHostingController(rootView: CameraResultView(viewModel: .init(coordinator: self, photo: photo)))
+    }
+    
     func presentHistoryView() {
         let historyView = HistoryView(viewModel: .init(coordinator: self))
         let hostingController = UIHostingController(rootView: historyView)

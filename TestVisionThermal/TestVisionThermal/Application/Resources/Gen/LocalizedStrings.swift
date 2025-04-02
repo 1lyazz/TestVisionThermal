@@ -14,6 +14,14 @@ internal enum Strings {
   internal static let historyButtonTitle = Strings.tr("Localizable", "historyButtonTitle", fallback: "History")
   /// Home
   internal static let homeButtonTitle = Strings.tr("Localizable", "homeButtonTitle", fallback: "Home")
+  /// To save your photo, our app needs permission to access Photos.
+  internal static let noPhotosAccessDescription = Strings.tr("Localizable", "noPhotosAccessDescription", fallback: "To save your photo, our app needs permission to access Photos.")
+  /// No Photos Access
+  internal static let noPhotosAccessTitle = Strings.tr("Localizable", "noPhotosAccessTitle", fallback: "No Photos Access")
+  /// OK
+  internal static let okButtonTitle = Strings.tr("Localizable", "okButtonTitle", fallback: "OK")
+  /// Save to Gallery
+  internal static let saveToGalleryButtonTitle = Strings.tr("Localizable", "saveToGalleryButtonTitle", fallback: "Save to Gallery")
   /// Settings
   internal static let settingsButtonTitle = Strings.tr("Localizable", "settingsButtonTitle", fallback: "Settings")
 }

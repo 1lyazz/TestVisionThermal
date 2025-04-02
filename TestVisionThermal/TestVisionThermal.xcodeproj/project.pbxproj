@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0A6AE20F2D9D2A7E00B19565 /* sharelink-for-swiftui in Frameworks */ = {isa = PBXBuildFile; productRef = 0A6AE20E2D9D2A7E00B19565 /* sharelink-for-swiftui */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		0ACDFE742D9AB459003C2949 /* TestVisionThermal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestVisionThermal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A6AE20F2D9D2A7E00B19565 /* sharelink-for-swiftui in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,6 +84,7 @@
 			);
 			name = TestVisionThermal;
 			packageProductDependencies = (
+				0A6AE20E2D9D2A7E00B19565 /* sharelink-for-swiftui */,
 			);
 			productName = TestVisionThermal;
 			productReference = 0ACDFE742D9AB459003C2949 /* TestVisionThermal.app */;
@@ -108,6 +114,9 @@
 			);
 			mainGroup = 0ACDFE6B2D9AB459003C2949;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0A6AE20D2D9D2A7E00B19565 /* XCRemoteSwiftPackageReference "sharelink-for-swiftui" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0ACDFE752D9AB459003C2949 /* Products */;
 			projectDirPath = "";
@@ -290,6 +299,9 @@
 				ENABLE_PREVIEWS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TestVisionThermal/Application/Resources/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Our app needs your permission to access the camera for you to be able to take photos using app filters.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "To save your photo, our app needs permission to access Photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "To save your photo, our app needs permission to access Photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -324,6 +336,9 @@
 				ENABLE_PREVIEWS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TestVisionThermal/Application/Resources/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Our app needs your permission to access the camera for you to be able to take photos using app filters.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "To save your photo, our app needs permission to access Photos.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "To save your photo, our app needs permission to access Photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -369,6 +384,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0A6AE20D2D9D2A7E00B19565 /* XCRemoteSwiftPackageReference "sharelink-for-swiftui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/swiftuiux/sharelink-for-swiftui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0A6AE20E2D9D2A7E00B19565 /* sharelink-for-swiftui */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0A6AE20D2D9D2A7E00B19565 /* XCRemoteSwiftPackageReference "sharelink-for-swiftui" */;
+			productName = "sharelink-for-swiftui";
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0ACDFE6C2D9AB459003C2949 /* Project object */;
 }
