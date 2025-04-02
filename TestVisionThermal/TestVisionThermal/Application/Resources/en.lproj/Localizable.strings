@@ -9,5 +9,7 @@
 
 // MARK: - Alerts
 
+"savedPhotoTitle" = "Saved to Gallery";
 "noPhotosAccessTitle" = "No Photos Access";
+
 "noPhotosAccessDescription" = "To save your photo, our app needs permission to access Photos.";

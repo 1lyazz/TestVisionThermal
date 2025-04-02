@@ -4,6 +4,7 @@ import SwiftUI
 final class CameraResultViewModel: ObservableObject {
     @Published var photo: UIImage
     @Published var isShowAlert: Bool = false
+    @Published var isShowToast: Bool = false
     @Published var isOnSettingsButton: Bool = false
 
     var alertTitle: String = ""
@@ -31,8 +32,8 @@ final class CameraResultViewModel: ObservableObject {
 
                 switch status {
                 case .authorized:
-//                    self.showLoadDrawingArAlert()
                     self.savePhotoToLibrary()
+                    isShowToast = true
                 case .denied, .restricted, .notDetermined:
                     self.alertTitle = Strings.noPhotosAccessTitle
                     self.alertDescription = Strings.noPhotosAccessDescription
@@ -40,8 +41,8 @@ final class CameraResultViewModel: ObservableObject {
                         self.isShowAlert = true
                     }
                 case .limited:
-//                    self.showLoadDrawingArAlert()
                     self.savePhotoToLibrary()
+                    isShowToast = true
                 @unknown default:
                     self.alertTitle = Strings.noPhotosAccessTitle
                     self.alertDescription = Strings.noPhotosAccessDescription

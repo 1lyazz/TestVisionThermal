@@ -1,6 +1,15 @@
 {
-  "originHash" : "15777242d23ffe28854b0abf1b2cfccedc411fff42fb36081983b7f84341bdd4",
+  "originHash" : "23ed24d05b93b26937fab3ffeae583451bd6a1dd34e227f8ce3789c7d511da38",
   "pins" : [
+    {
+      "identity" : "alerttoast?tab=readme-ov-file#swift-package-manager",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/elai950/AlertToast?tab=readme-ov-file#swift-package-manager",
+      "state" : {
+        "revision" : "b39252eacd159904afd7d718bba0afabb87f2f2f",
+        "version" : "1.3.9"
+      }
+    },
     {
       "identity" : "sharelink-for-swiftui",
       "kind" : "remoteSourceControl",

@@ -1,3 +1,4 @@
+import AlertToast
 import sharelink_for_swiftui
 import SwiftUI
 
@@ -15,7 +16,8 @@ struct CameraResultView: View {
                 
                 Spacer()
                 
-                MainButton(title: Strings.saveToGalleryButtonTitle, icon: .saveIcon) { viewModel.tapOnSaveButton()
+                MainButton(title: Strings.saveToGalleryButtonTitle, icon: .saveIcon) {
+                    viewModel.tapOnSaveButton()
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 13)
@@ -34,6 +36,17 @@ struct CameraResultView: View {
             }
         } message: {
             Text(viewModel.alertDescription)
+        }
+        .toast(isPresenting: $viewModel.isShowToast) {
+            AlertToast(
+                displayMode: .hud,
+                type: .regular,
+                title: Strings.savedPhotoTitle,
+                style: .style(
+                    backgroundColor: .primaryB827CE,
+                    titleColor: .white
+                )
+            )
         }
     }
     

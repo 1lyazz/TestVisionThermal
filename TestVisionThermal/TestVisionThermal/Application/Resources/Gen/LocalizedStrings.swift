@@ -20,6 +20,8 @@ internal enum Strings {
   internal static let noPhotosAccessTitle = Strings.tr("Localizable", "noPhotosAccessTitle", fallback: "No Photos Access")
   /// OK
   internal static let okButtonTitle = Strings.tr("Localizable", "okButtonTitle", fallback: "OK")
+  /// Saved to Gallery
+  internal static let savedPhotoTitle = Strings.tr("Localizable", "savedPhotoTitle", fallback: "Saved to Gallery")
   /// Save to Gallery
   internal static let saveToGalleryButtonTitle = Strings.tr("Localizable", "saveToGalleryButtonTitle", fallback: "Save to Gallery")
   /// Settings
