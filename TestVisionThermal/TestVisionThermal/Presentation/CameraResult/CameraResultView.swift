@@ -1,4 +1,5 @@
 import AlertToast
+import AVFoundation
 import sharelink_for_swiftui
 import SwiftUI
 
@@ -12,15 +13,11 @@ struct CameraResultView: View {
             VStack(spacing: 0) {
                 navigationBar
                 
-                photoView
+                mediaContent
                 
                 Spacer()
                 
-                MainButton(title: Strings.saveToGalleryButtonTitle, icon: .saveIcon) {
-                    viewModel.tapOnSaveButton()
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 13)
+                saveButton
             }
         }
         .edgesIgnoringSafeArea(.top)
@@ -41,7 +38,7 @@ struct CameraResultView: View {
             AlertToast(
                 displayMode: .hud,
                 type: .regular,
-                title: Strings.savedPhotoTitle,
+                title: viewModel.toastTitle,
                 style: .style(
                     backgroundColor: .primaryB827CE,
                     titleColor: .white
@@ -72,36 +69,67 @@ struct CameraResultView: View {
         .frame(height: 106)
     }
     
-    private var photoView: some View {
-        Image(uiImage: viewModel.photo)
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .frame(width: 351, height: 543)
-            .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: 20))
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .foregroundStyle(.gray2D2D2D)
-            )
-            .padding(.horizontal, 12)
-            .padding(.top, 4)
+    private var mediaContent: some View {
+        Group {
+            if let photo = viewModel.photo {
+                Image(uiImage: photo)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 351, height: 543)
+                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+            } else if let videoURL = viewModel.videoURL {
+                VideoPlayerView(videoURL: videoURL, autoPlay: true)
+                    .frame(width: 351, height: 543)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .onDisappear {
+                        AVPlayer(url: videoURL).pause()
+                    }
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .foregroundStyle(.gray2D2D2D)
+        )
+        .padding(.horizontal, 12)
+        .padding(.top, 4)
+    }
+    
+    private var saveButton: some View {
+        MainButton(title: Strings.saveToGalleryButtonTitle, icon: .saveIcon) {
+            viewModel.tapOnSaveButton()
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 13)
     }
     
     private var shareButton: some View {
-        ShareLinkButton(
-            item: viewModel.photo,
-            title: UIApplication.shared.appName,
-            label: {
-                Circle()
-                    .stroke(.tertiary99889C, lineWidth: 1)
-                    .background(Circle().fill(.clear))
-                    .frame(width: 40, height: 40)
-                    .overlay {
-                        Image(.shareIcon)
-                            .resizable()
-                            .scaleEffect(0.5)
-                    }
+        Group {
+            if let photo = viewModel.photo {
+                ShareLinkButton(item: photo, title: UIApplication.shared.appName) {
+                    Circle()
+                        .stroke(.tertiary99889C, lineWidth: 1)
+                        .background(Circle().fill(.clear))
+                        .frame(width: 40, height: 40)
+                        .overlay {
+                            Image(.shareIcon)
+                                .resizable()
+                                .scaleEffect(0.5)
+                        }
+                }
+            } else if let videoURL = viewModel.videoURL {
+                ShareLinkButton(item: videoURL, icon: viewModel.videoThumbnail, title: UIApplication.shared.appName) {
+                    Circle()
+                        .stroke(.tertiary99889C, lineWidth: 1)
+                        .background(Circle().fill(.clear))
+                        .frame(width: 40, height: 40)
+                        .overlay {
+                            Image(.shareIcon)
+                                .resizable()
+                                .scaleEffect(0.5)
+                        }
+                }
             }
-        )
+        }
     }
 }

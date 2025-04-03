@@ -1,3 +1,4 @@
+import AlertToast
 import SwiftUI
 
 struct VisionCameraView: View {
@@ -7,25 +8,61 @@ struct VisionCameraView: View {
         ZStack {
             Color.black090909
             
-            CameraView(cameraSessionManager: viewModel.cameraSessionManager)
+            if viewModel.isCameraAccess {
+                CameraView(cameraSessionManager: viewModel.cameraSessionManager)
+                    .blur(radius: viewModel.isChangeCameraState ? 10 : 0)
+            }
             
             VStack(spacing: 0) {
                 cameraHeader
                 
-                if viewModel.selectCameraType == .videoCamera {
+                if viewModel.selectCameraType == .videoCamera && viewModel.isCameraAccess {
                     videoTimer
                 }
                 
                 Spacer()
                 
-                FilterList
-                
-                cameraFooter
+                if viewModel.isCameraAccess {
+                    FilterList
+                        .opacity(viewModel.isRecording ? 0.6 : 1)
+                        .animation(.default, value: viewModel.isRecording)
+                        .transition(.opacity)
+                    
+                    cameraFooter
+                }
+            }
+            
+            if !viewModel.isCameraAccess {
+                noCameraAccessView
             }
         }
         .edgesIgnoringSafeArea(.all)
         .onAppear {
             viewModel.isDisableCameraButton = false
+        }
+        .alert(viewModel.alertTitle, isPresented: $viewModel.isShowAlert) {
+            Button(Strings.okButtonTitle) {
+                viewModel.isShowAlert = false
+            }
+            
+            if viewModel.isOnSettingsButton {
+                Button(Strings.settingsButtonTitle) {
+                    UIApplication.shared.openPhoneSettings()
+                }
+            }
+        } message: {
+            Text(viewModel.alertDescription)
+        }
+        .toast(isPresenting: $viewModel.isShowToast) {
+            AlertToast(
+                displayMode: .hud,
+                type: .regular,
+                title: viewModel.toastTitle,
+                style: .style(
+                    backgroundColor: .primaryB827CE,
+                    titleColor: .white
+                )
+            )
         }
     }
     
@@ -43,13 +80,18 @@ struct VisionCameraView: View {
                     Spacer()
                     
                     cameraSegment
+                        .opacity(viewModel.isRecording ? 0.6 : 1)
+                        .animation(.default, value: viewModel.isRecording)
+                        .transition(.opacity)
                     
                     Spacer()
                     
                     CircleButton(icon: viewModel.isFlashOn ? .flashOnIcon : .flashOffIcon) { viewModel.tapOnFlashButton() }
                         .opacity(viewModel.isFrontCamera ? 0 : 1)
+                        .opacity(!viewModel.isCameraAccess ? 0.6 : 1)
                         .animation(.default, value: viewModel.isFrontCamera)
                         .transition(.opacity)
+                        .disabled(!viewModel.isCameraAccess)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 2)
@@ -67,6 +109,9 @@ struct VisionCameraView: View {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
                     CircleButton(icon: .backIcon) { viewModel.tapOnBackButton() }
+                        .opacity(viewModel.isRecording ? 0 : 1)
+                        .animation(.default, value: viewModel.isRecording)
+                        .transition(.opacity)
                     
                     Spacer()
                     
@@ -75,6 +120,9 @@ struct VisionCameraView: View {
                     Spacer()
                     
                     CircleButton(icon: .flipIcon, size: 44) { viewModel.tapOnFlipButton() }
+                        .opacity(viewModel.isRecording ? 0 : 1)
+                        .animation(.default, value: viewModel.isRecording)
+                        .transition(.opacity)
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 4)
@@ -103,7 +151,7 @@ struct VisionCameraView: View {
                 ForEach(CameraType.allCases, id: \.self) { type in
                     CameraSegmentButton(icon: type.cameraIcon, isSelected: viewModel.selectCameraType == type) {
                         withAnimation {
-                            viewModel.tapOnSegmentButton(cameraType: type)
+                            viewModel.tapOnCameraSegmentButton(cameraType: type)
                         }
                     }
                 }
@@ -115,7 +163,9 @@ struct VisionCameraView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 8)
                 .frame(width: 74, height: 27)
-                .foregroundStyle(.black090909.opacity(0.7))
+                .foregroundStyle(viewModel.isRecording ? .redCE272A.opacity(0.7) : .black090909.opacity(0.7))
+                .animation(.default, value: viewModel.isRecording)
+                .transition(.opacity)
             
             RoundedRectangle(cornerRadius: 8)
                 .frame(width: 74, height: 27)
@@ -133,7 +183,7 @@ struct VisionCameraView: View {
                     )
                 )
             
-            Text("00:00:10")
+            Text(viewModel.formattedRecordingTime)
                 .font(Fonts.SFProDisplay.regular.swiftUIFont(size: 13))
                 .foregroundStyle(.white)
         }
@@ -165,11 +215,42 @@ struct VisionCameraView: View {
                     .background(Circle().fill(.clear))
                     .frame(width: 59, height: 59)
                     
-                Circle()
+                RoundedRectangle(cornerRadius: viewModel.isRecording ? 10 : 24)
                     .foregroundStyle(.primaryB827CE)
-                    .frame(width: 48, height: 48)
+                    .frame(
+                        width: viewModel.isRecording ? 35 : 48,
+                        height: viewModel.isRecording ? 35 : 48
+                    )
+                    .animation(.easeInOut(duration: 0.3), value: viewModel.isRecording)
             }
         }
         .disabled(viewModel.isDisableCameraButton)
+    }
+    
+    private var noCameraAccessView: some View {
+        VStack(spacing: 16) {
+            VStack(spacing: 4) {
+                Image(.noCameraIcon)
+                    
+                Text(Strings.noCameraAccessTitle)
+                    .font(Fonts.SFProDisplay.bold.swiftUIFont(size: 22))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                    .multilineTextAlignment(.center)
+                    
+                Text(Strings.noCameraAccessDescription)
+                    .font(Fonts.SFProDisplay.regular.swiftUIFont(size: 13))
+                    .foregroundColor(.gray9A9A9A)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+            }
+            
+            if viewModel.isOnSettingsButton {
+                MainButton(title: Strings.goSettingsButtonTitle) {
+                    UIApplication.shared.openPhoneSettings()
+                }
+            }
+        }
+        .padding(.horizontal, 40)
     }
 }

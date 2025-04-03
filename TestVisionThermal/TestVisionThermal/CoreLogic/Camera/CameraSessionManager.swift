@@ -2,9 +2,13 @@ import AVFoundation
 import UIKit
 
 class CameraSessionManager: NSObject, ObservableObject {
+    @Published var isRecording = false
+    
     private let captureSession = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
+    private let movieOutput = AVCaptureMovieFileOutput()
     private var captureCompletion: ((UIImage?) -> Void)?
+    private var videoCompletion: ((URL) -> Void)?
     private var currentCaptureDevice: AVCaptureDevice?
     private let sessionQueue = DispatchQueue(label: "camera.session.queue")
     
@@ -31,30 +35,89 @@ class CameraSessionManager: NSObject, ObservableObject {
         return previewLayer
     }
     
-    func switchCamera() {
+    func flipCamera() {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
             
             self.captureSession.beginConfiguration()
             defer { self.captureSession.commitConfiguration() }
             
-            guard let currentInput = self.captureSession.inputs.first as? AVCaptureDeviceInput else { return }
-            self.captureSession.removeInput(currentInput)
+            let videoInputs = self.captureSession.inputs
+                .compactMap { $0 as? AVCaptureDeviceInput }
+                .filter { $0.device.hasMediaType(.video) }
             
-            let newPosition: AVCaptureDevice.Position = currentInput.device.position == .back ? .front : .back
+            guard let currentVideoInput = videoInputs.first else { return }
             
-            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera,
-                                                       for: .video,
-                                                       position: newPosition),
-                  let newInput = try? AVCaptureDeviceInput(device: device) else { return }
+            self.captureSession.removeInput(currentVideoInput)
             
-            guard self.captureSession.canAddInput(newInput) else {
-                self.captureSession.addInput(currentInput)
+            let newPosition: AVCaptureDevice.Position = currentVideoInput.device.position == .back ? .front : .back
+            
+            guard let newDevice = AVCaptureDevice.default(
+                .builtInWideAngleCamera,
+                for: .video,
+                position: newPosition
+            ),
+                let newInput = try? AVCaptureDeviceInput(device: newDevice)
+            else {
+                self.captureSession.addInput(currentVideoInput)
                 return
             }
             
-            self.captureSession.addInput(newInput)
-            self.currentCaptureDevice = device
+            if self.captureSession.canAddInput(newInput) {
+                self.captureSession.addInput(newInput)
+                self.currentCaptureDevice = newDevice
+            } else {
+                self.captureSession.addInput(currentVideoInput)
+            }
+        }
+    }
+    
+    func switchCameraType(to type: CameraType) {
+        sessionQueue.async {
+            self.captureSession.beginConfiguration()
+            defer { self.captureSession.commitConfiguration() }
+            
+            self.captureSession.outputs.forEach { self.captureSession.removeOutput($0) }
+            
+            switch type {
+            case .photoCamera:
+                if self.captureSession.canAddOutput(self.photoOutput) {
+                    self.captureSession.addOutput(self.photoOutput)
+                }
+            case .videoCamera:
+                self.configureVideoOutput()
+            }
+        }
+    }
+    
+    func startRecording(completion: @escaping (URL) -> Void) {
+        sessionQueue.async {
+            let tempURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString)
+                .appendingPathExtension("mov")
+            
+            self.movieOutput.startRecording(to: tempURL, recordingDelegate: self)
+            self.videoCompletion = completion
+            DispatchQueue.main.async { self.isRecording = true }
+        }
+    }
+    
+    func stopRecording() {
+        sessionQueue.async {
+            self.movieOutput.stopRecording()
+            DispatchQueue.main.async { self.isRecording = false }
+        }
+    }
+    
+    private func configureVideoOutput() {
+        if captureSession.canAddOutput(movieOutput) {
+            captureSession.addOutput(movieOutput)
+            
+            if let connection = movieOutput.connection(with: .video) {
+                if connection.isVideoStabilizationSupported {
+                    connection.preferredVideoStabilizationMode = .auto
+                }
+            }
         }
     }
     
@@ -64,6 +127,14 @@ class CameraSessionManager: NSObject, ObservableObject {
         
         if captureSession.canAddInput(input) {
             captureSession.addInput(input)
+        }
+        
+        if let audioDevice = AVCaptureDevice.default(for: .audio),
+           let audioInput = try? AVCaptureDeviceInput(device: audioDevice)
+        {
+            if captureSession.canAddInput(audioInput) {
+                captureSession.addInput(audioInput)
+            }
         }
         
         if captureSession.canAddOutput(photoOutput) {
@@ -112,5 +183,19 @@ extension CameraSessionManager: AVCapturePhotoCaptureDelegate {
         }
         
         captureCompletion?(image)
+    }
+}
+
+extension CameraSessionManager: AVCaptureFileOutputRecordingDelegate {
+    func fileOutput(_ output: AVCaptureFileOutput,
+                    didFinishRecordingTo outputFileURL: URL,
+                    from connections: [AVCaptureConnection],
+                    error: Error?)
+    {
+        if let error = error {
+            print("Video recording error: \(error)")
+            return
+        }
+        videoCompletion?(outputFileURL)
     }
 }

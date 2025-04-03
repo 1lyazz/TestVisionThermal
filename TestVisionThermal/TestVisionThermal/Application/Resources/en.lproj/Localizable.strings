@@ -6,10 +6,17 @@
 "saveToGalleryButtonTitle" = "Save to Gallery";
 "okButtonTitle" = "OK";
 "settingsButtonTitle" = "Settings";
+"goSettingsButtonTitle" = "Go to settings";
 
 // MARK: - Alerts
 
-"savedPhotoTitle" = "Saved to Gallery";
+"savedToGalleryTitle" = "Saved to Gallery";
+"savedErrorTitle" = "Saved Error";
+"withoutAudioTitle" = "Without Audio";
 "noPhotosAccessTitle" = "No Photos Access";
+"noMicrophoneAccessTitle" = "No Microphone Access";
+"noCameraAccessTitle" = "No Camera Access";
 
 "noPhotosAccessDescription" = "To save your photo, our app needs permission to access Photos.";
+"noMicrophoneDescription" = "To shoot video with audio, our app needs permission to access the iPhone Microphone.";
+"noCameraAccessDescription" = "To take photos and shoot videos with filters, our app needs permission to access the iPhone Camera.";
