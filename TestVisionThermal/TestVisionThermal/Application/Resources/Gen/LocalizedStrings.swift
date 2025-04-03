@@ -40,6 +40,10 @@ internal enum Strings {
   internal static let settingsButtonTitle = Strings.tr("Localizable", "settingsButtonTitle", fallback: "Settings")
   /// Without Audio
   internal static let withoutAudioTitle = Strings.tr("Localizable", "withoutAudioTitle", fallback: "Without Audio")
+  /// Something went wrong :(
+  internal static let wrongAccessDescription = Strings.tr("Localizable", "wrongAccessDescription", fallback: "Something went wrong :(")
+  /// Ooops!
+  internal static let wrongAccessTitle = Strings.tr("Localizable", "wrongAccessTitle", fallback: "Ooops!")
 }
 // swiftlint:enable explicit_type_interface function_parameter_count identifier_name line_length
 // swiftlint:enable nesting type_body_length type_name vertical_whitespace_opening_braces

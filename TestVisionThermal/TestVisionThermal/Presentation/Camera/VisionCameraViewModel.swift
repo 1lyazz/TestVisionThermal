@@ -16,6 +16,7 @@ final class VisionCameraViewModel: ObservableObject {
     @Published var isMicrophoneAccess = true
     @Published var isCameraAccess = true
     @Published var isChangeCameraState = false
+    @Published var cameraError: CameraError?
     
     var alertTitle: String = ""
     var alertDescription: String = ""
@@ -56,13 +57,16 @@ final class VisionCameraViewModel: ObservableObject {
         coordinator.pushResultView(photo: .simulatorPhoto)
         #else
         DispatchQueue.main.async { [weak self] in
-            self?.cameraSessionManager.capturePhoto { [weak self] image in
+            self?.cameraSessionManager.capturePhoto { [weak self] result in
                 guard let self = self else { return }
-        
-                if let image = image {
+                
+                switch result {
+                case .success(let image):
                     self.coordinator.pushResultView(photo: image)
-                } else {
-                    self.coordinator.pushResultView(photo: .simulatorPhoto)
+                case .failure(let error):
+                    self.alertTitle = Strings.wrongAccessTitle
+                    self.alertDescription = error.localizedDescription
+                    self.isShowAlert = true
                 }
                 self.isDisableCameraButton = false
             }
@@ -181,8 +185,15 @@ final class VisionCameraViewModel: ObservableObject {
     }
     
     private func startRecording() {
-        cameraSessionManager.startRecording { [weak self] url in
-            self?.coordinator.pushResultView(video: url)
+        cameraSessionManager.startRecording { [weak self] result in
+            switch result {
+            case .success(let url):
+                self?.coordinator.pushResultView(video: url)
+            case .failure(let error):
+                self?.alertTitle = Strings.wrongAccessTitle
+                self?.alertDescription = error.localizedDescription
+                self?.isShowAlert = true
+            }
         }
         startTimer()
     }

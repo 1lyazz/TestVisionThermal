@@ -9,7 +9,7 @@ struct VisionCameraView: View {
             Color.black090909
             
             if viewModel.isCameraAccess {
-                CameraView(cameraSessionManager: viewModel.cameraSessionManager)
+                CameraView(cameraSessionManager: viewModel.cameraSessionManager, error: $viewModel.cameraError)
                     .blur(radius: viewModel.isChangeCameraState ? 10 : 0)
             }
             
