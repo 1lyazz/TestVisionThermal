@@ -135,7 +135,11 @@ final class VisionCameraViewModel: ObservableObject {
     
     func tapOnFilterButton(filterType: CameraFilterType) {
         hapticGen.setUpHaptic()
-        selectedFilter = filterType
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.selectedFilter = filterType
+            self?.cameraSessionManager.setCurrentFilter(filterType)
+        }
     }
     
     func tapOnFlashButton() {
