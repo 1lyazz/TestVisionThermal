@@ -9,5 +9,7 @@
 		<string>SF-Pro-Display-Regular</string>
 		<string>SF-Pro-Display-Semibold</string>
 	</array>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 </dict>
 </plist>

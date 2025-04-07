@@ -7,15 +7,24 @@ struct CameraView: UIViewControllerRepresentable {
     
     func makeUIViewController(context: Context) -> UIViewController {
         let viewController = UIViewController()
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        viewController.view.addSubview(imageView)
         
-        cameraSessionManager.setupSession { [weak viewController] result in
+        NSLayoutConstraint.activate([
+            imageView.topAnchor.constraint(equalTo: viewController.view.topAnchor),
+            imageView.bottomAnchor.constraint(equalTo: viewController.view.bottomAnchor),
+            imageView.leadingAnchor.constraint(equalTo: viewController.view.leadingAnchor),
+            imageView.trailingAnchor.constraint(equalTo: viewController.view.trailingAnchor)
+        ])
+        
+        cameraSessionManager.setupSession { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success:
-                    if let previewLayer = cameraSessionManager.previewLayer {
-                        previewLayer.frame = viewController?.view.bounds ?? .zero
-                        previewLayer.videoGravity = .resizeAspectFill
-                        viewController?.view.layer.addSublayer(previewLayer)
+                    Task {
+                        await processPreviewFrames(imageView: imageView)
                     }
                 case .failure(let error):
                     self.error = error
@@ -33,11 +42,16 @@ struct CameraView: UIViewControllerRepresentable {
         return viewController
     }
     
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
-        if let previewLayer = cameraSessionManager.previewLayer {
-            previewLayer.frame = uiViewController.view.bounds
+    private func processPreviewFrames(imageView: UIImageView) async {
+        for await cgImage in cameraSessionManager.previewStream {
+            let image = UIImage(cgImage: cgImage)
+            DispatchQueue.main.async {
+                imageView.image = image
+            }
         }
     }
+    
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
     
     func makeCoordinator() -> Coordinator {
         Coordinator(cameraSessionManager: cameraSessionManager)
@@ -51,14 +65,15 @@ struct CameraView: UIViewControllerRepresentable {
         }
         
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
-            guard let view = gesture.view,
-                  let previewLayer = cameraSessionManager.previewLayer else { return }
+            guard let view = gesture.view else { return }
             
             let location = gesture.location(in: view)
-            let devicePoint = previewLayer.captureDevicePointConverted(fromLayerPoint: location)
+            let devicePoint = CGPoint(
+                x: location.x / view.bounds.width,
+                y: location.y / view.bounds.height
+            )
             
             cameraSessionManager.focus(at: devicePoint)
-            
             showFocusIndicator(at: location, in: view)
         }
         

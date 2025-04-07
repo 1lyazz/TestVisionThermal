@@ -25,6 +25,7 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
 
     private(set) var previewLayer: AVCaptureVideoPreviewLayer?
     
+    private let filterProcessor = ImageFilterProcessor()
     private let sessionQueue = DispatchQueue(label: "camera.session.queue")
     private let captureSession = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
@@ -33,9 +34,23 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
     private var audioInput: AVCaptureDeviceInput?
     private var activeCamera: AVCaptureDevice?
     private var assetWriter: AVAssetWriter?
+    private var captureHandlers = CaptureHandlers()
+    
+    private let videoOutput = AVCaptureVideoDataOutput()
+    private var addToPreviewStream: ((CGImage) -> Void)?
+    lazy var previewStream: AsyncStream<CGImage> = AsyncStream { continuation in
+        addToPreviewStream = { cgImage in
+            continuation.yield(cgImage)
+        }
+    }
+    
+    private var pixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
+    
+    private var videoWriter: AVAssetWriter?
     private var videoWriterInput: AVAssetWriterInput?
     private var audioWriterInput: AVAssetWriterInput?
-    private var captureHandlers = CaptureHandlers()
+    private var videoWritingStarted = false
+    private var videoWritingStartTime: CMTime?
     
     // MARK: - Session Setup
 
@@ -98,10 +113,34 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
             captureSession.addOutput(photoOutput)
         }
         
+        videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
+        if captureSession.canAddOutput(videoOutput) {
+            captureSession.addOutput(videoOutput)
+        }
+        
         do {
             try configureAudioInput()
         } catch {
             print("Audio configuration failed, continuing without audio: \(error)")
+        }
+        
+        videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
+        videoOutput.alwaysDiscardsLateVideoFrames = true
+        videoOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
+        
+        if captureSession.canAddOutput(videoOutput) {
+            captureSession.addOutput(videoOutput)
+        }
+        
+        if let connection = videoOutput.connection(with: .video) {
+            if connection.isVideoOrientationSupported {
+                connection.videoOrientation = .portrait
+            }
+            if connection.isVideoMirroringSupported {
+                connection.isVideoMirrored = activeCamera?.position == .front
+            }
         }
     }
     
@@ -195,9 +234,19 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
             
             self.captureSession.beginConfiguration()
             defer { self.captureSession.commitConfiguration() }
-            
-            self.captureSession.outputs.forEach { self.captureSession.removeOutput($0) }
-            
+
+            for output in self.captureSession.outputs {
+                if output != self.videoOutput {
+                    self.captureSession.removeOutput(output)
+                }
+            }
+
+            if !self.captureSession.outputs.contains(self.videoOutput),
+               self.captureSession.canAddOutput(self.videoOutput)
+            {
+                self.captureSession.addOutput(self.videoOutput)
+            }
+
             switch type {
             case .photoCamera:
                 if self.captureSession.canAddOutput(self.photoOutput) {
@@ -208,7 +257,7 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
             }
         }
     }
-    
+
     private func configureVideoOutput() {
         guard captureSession.canAddOutput(movieOutput) else { return }
         captureSession.addOutput(movieOutput)
@@ -230,7 +279,7 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
             self.captureHandlers.photoCompletion = { result in
                 switch result {
                 case .success(let image):
-                    let filteredImage = self.applyFilter(to: image)
+                    let filteredImage = self.filterProcessor.applyFilter(to: image, filterType: self.currentFilter)
                     completion(.success(filteredImage))
                 case .failure(let error):
                     completion(.failure(error))
@@ -251,132 +300,109 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
             
-            let tempURL = FileManager.default.temporaryDirectory
+            guard let documentsDirectory = FileManager.default.urls(
+                for: .documentDirectory,
+                in: .userDomainMask
+            ).first else {
+                completion(.failure(.fileOutputFailed))
+                return
+            }
+            
+            let videoURL = documentsDirectory
                 .appendingPathComponent(UUID().uuidString)
                 .appendingPathExtension("mov")
             
-            self.captureHandlers.videoCompletion = completion
-            self.movieOutput.startRecording(to: tempURL, recordingDelegate: self)
-            DispatchQueue.main.async { self.isRecording = true }
+            do {
+                try self.setupVideoWriter(outputURL: videoURL)
+                self.videoWritingStarted = true
+                self.videoWritingStartTime = nil
+                self.captureHandlers.videoCompletion = completion
+                DispatchQueue.main.async { self.isRecording = true }
+            } catch {
+                completion(.failure(.fileOutputFailed))
+            }
         }
+    }
+    
+    private func setupVideoWriter(outputURL: URL) throws {
+        let writer = try AVAssetWriter(outputURL: outputURL, fileType: .mov)
+        
+        let videoSettings: [String: Any] = [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: 720,
+            AVVideoHeightKey: 1280,
+            AVVideoCompressionPropertiesKey: [
+                AVVideoAverageBitRateKey: 6000000,
+                AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel
+            ]
+        ]
+        
+        let videoInput = AVAssetWriterInput(
+            mediaType: .video,
+            outputSettings: videoSettings
+        )
+        videoInput.expectsMediaDataInRealTime = true
+        
+        if writer.canAdd(videoInput) {
+            writer.add(videoInput)
+            videoWriterInput = videoInput
+        }
+        
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(
+            assetWriterInput: videoInput,
+            sourcePixelBufferAttributes: [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                kCVPixelBufferWidthKey as String: 1280,
+                kCVPixelBufferHeightKey as String: 720
+            ]
+        )
+        pixelBufferAdaptor = adaptor
+        
+        let audioSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVNumberOfChannelsKey: 1,
+            AVSampleRateKey: 44100,
+            AVEncoderBitRateKey: 64000
+        ]
+        
+        let audioInput = AVAssetWriterInput(
+            mediaType: .audio,
+            outputSettings: audioSettings
+        )
+        audioInput.expectsMediaDataInRealTime = true
+        
+        if writer.canAdd(audioInput) {
+            writer.add(audioInput)
+            audioWriterInput = audioInput
+        }
+        
+        videoWriter = writer
+        writer.startWriting()
     }
     
     func stopRecording() {
         sessionQueue.async { [weak self] in
-            self?.movieOutput.stopRecording()
-            DispatchQueue.main.async { self?.isRecording = false }
-        }
-    }
-    
-    private func applyFilter(to image: UIImage) -> UIImage {
-        guard currentFilter != .original,
-              let ciImage = CIImage(image: image)
-        else {
-            return image
-        }
-        
-        let context = CIContext(options: nil)
-        var outputImage: CIImage = ciImage
-        
-        switch currentFilter {
-        case .thermal:
-            let gradientColors = [
-                UIColor.blue.cgColor,
-                UIColor.green.cgColor,
-                UIColor.yellow.cgColor,
-                UIColor.red.cgColor
-            ]
+            guard let self = self, self.videoWritingStarted else { return }
             
-            let gradientLocations: [CGFloat] = [0.0, 0.15, 0.25, 0.35, 1.0]
+            self.videoWritingStarted = false
+            self.videoWriterInput?.markAsFinished()
+            self.audioWriterInput?.markAsFinished()
             
-            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
-                                      colors: gradientColors as CFArray,
-                                      locations: gradientLocations)
-            
-            let gradientSize = CGSize(width: 256, height: 1)
-            UIGraphicsBeginImageContext(gradientSize)
-            let context = UIGraphicsGetCurrentContext()
-            context?.drawLinearGradient(
-                gradient!,
-                start: CGPoint(x: 0, y: 0),
-                end: CGPoint(x: gradientSize.width, y: 0),
-                options: []
-            )
-            let gradientImage = UIGraphicsGetImageFromCurrentImageContext()
-            UIGraphicsEndImageContext()
-            
-            guard let gradientCIImage = CIImage(image: gradientImage!) else {
-                return UIImage()
-            }
-            
-            if let colorMap = CIFilter(name: "CIColorMap") {
-                colorMap.setValue(ciImage, forKey: kCIInputImageKey)
-                colorMap.setValue(gradientCIImage, forKey: "inputGradientImage")
-                if let colorMap = colorMap.outputImage {
-                    outputImage = colorMap
+            self.videoWriter?.finishWriting { [weak self] in
+                DispatchQueue.main.async {
+                    self?.isRecording = false
+                    if let url = self?.videoWriter?.outputURL {
+                        self?.captureHandlers.videoCompletion?(.success(url))
+                        print(url)
+                        print("SAVED")
+                    } else {
+                        self?.captureHandlers.videoCompletion?(.failure(.fileOutputFailed))
+                        print("FAILD SAVED")
+                    }
+                    self?.videoWriter = nil
                 }
-            }
-            
-        case .night:
-            if let contrastFilter = CIFilter(name: "CIColorControls") {
-                contrastFilter.setValue(outputImage, forKey: kCIInputImageKey)
-                contrastFilter.setValue(2.0, forKey: kCIInputContrastKey)
-                if let contrasted = contrastFilter.outputImage {
-                    outputImage = contrasted
-                }
-            }
-            
-            if let monoFilter = CIFilter(name: "CIColorMonochrome") {
-                monoFilter.setValue(outputImage, forKey: kCIInputImageKey)
-                monoFilter.setValue(CIColor(red: 0.0, green: 1.0, blue: 0.0), forKey: kCIInputColorKey)
-                monoFilter.setValue(1.0, forKey: kCIInputIntensityKey)
-                if let mono = monoFilter.outputImage {
-                    outputImage = mono
-                }
-            }
-            
-            if let noiseFilter = CIFilter(name: "CINoiseReduction") {
-                noiseFilter.setValue(outputImage, forKey: kCIInputImageKey)
-                noiseFilter.setValue(0.02, forKey: "inputNoiseLevel")
-                noiseFilter.setValue(0.4, forKey: "inputSharpness")
-                if let noiseReduced = noiseFilter.outputImage {
-                    outputImage = noiseReduced
-                }
-            }
-            
-        case .glitch:
-            if let filter = currentFilter.coreImageFilter {
-                filter.setValue(ciImage, forKey: kCIInputImageKey)
-                outputImage = filter.outputImage ?? ciImage
-            }
-            
-        case .neon:
-            if let filter = currentFilter.coreImageFilter {
-                filter.setValue(ciImage, forKey: kCIInputImageKey)
-                outputImage = filter.outputImage ?? ciImage
-            }
-            
-            if let monoFilter = CIFilter(name: "CIColorMonochrome") {
-                monoFilter.setValue(outputImage, forKey: kCIInputImageKey)
-                monoFilter.setValue(CIColor(red: 0.8, green: 0.0, blue: 1.0), forKey: kCIInputColorKey)
-                monoFilter.setValue(1.0, forKey: kCIInputIntensityKey)
-                if let mono = monoFilter.outputImage {
-                    outputImage = mono
-                }
-            }
-            
-        default:
-            if let filter = currentFilter.coreImageFilter {
-                filter.setValue(ciImage, forKey: kCIInputImageKey)
-                outputImage = filter.outputImage ?? ciImage
             }
         }
-        
-        guard let cgImage = context.createCGImage(outputImage, from: outputImage.extent) else {
-            return image
-        }
-        
-        return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
     }
 }
 
@@ -388,10 +414,11 @@ private struct CaptureHandlers {
 }
 
 extension CameraSessionManager: AVCapturePhotoCaptureDelegate {
-    func photoOutput(_ output: AVCapturePhotoOutput,
-                     didFinishProcessingPhoto photo: AVCapturePhoto,
-                     error: Error?)
-    {
+    func photoOutput(
+        _ output: AVCapturePhotoOutput,
+        didFinishProcessingPhoto photo: AVCapturePhoto,
+        error: Error?
+    ) {
         if error != nil {
             captureHandlers.photoCompletion?(.failure(.captureFailed))
             return
@@ -409,11 +436,12 @@ extension CameraSessionManager: AVCapturePhotoCaptureDelegate {
 }
 
 extension CameraSessionManager: AVCaptureFileOutputRecordingDelegate {
-    func fileOutput(_ output: AVCaptureFileOutput,
-                    didFinishRecordingTo outputFileURL: URL,
-                    from connections: [AVCaptureConnection],
-                    error: Error?)
-    {
+    func fileOutput(
+        _ output: AVCaptureFileOutput,
+        didFinishRecordingTo outputFileURL: URL,
+        from connections: [AVCaptureConnection],
+        error: Error?
+    ) {
         if let error = error {
             captureHandlers.videoCompletion?(.failure(.fileOutputFailed))
             print("Recording error: \(error.localizedDescription)")
@@ -424,53 +452,121 @@ extension CameraSessionManager: AVCaptureFileOutputRecordingDelegate {
     }
 }
 
-extension CameraFilterType {
-    var coreImageFilter: CIFilter? {
-        switch self {
-        case .original:
-            return nil
-        case .thermal:
-            return CIFilter()
-        case .heat:
-            return CIFilter(name: "CIThermal")
-        case .night:
-            return CIFilter()
-        case .xRay:
-            let xRayFilter = CIFilter.xRay()
-            return xRayFilter
-        case .glitch:
-            let filter = CIFilter.hueAdjust()
-            filter.angle = 5
-            return filter
-        case .halftone:
-            return CIFilter(name: "CICMYKHalftone")
-        case .invert:
-            return CIFilter(name: "CIColorInvert")
-        case .noir:
-            return CIFilter(name: "CIPhotoEffectNoir")
-        case .neon:
-            return CIFilter(name: "CIColorInvert")
-        case .chrome:
-            return CIFilter(name: "CIPhotoEffectChrome")
-        case .spotColor:
-            return CIFilter(name: "CISpotColor")
-        case .draw:
-            return CIFilter(name: "CIEdgeWork")
-        case .blur:
-            return CIFilter(name: "CIDiscBlur")
-        case .motionBlur:
-            return CIFilter(name: "CIMotionBlur")
-        case .pixel:
-            return CIFilter(name: "CIPixellate")
-        case .circlePixel:
-            return CIFilter(name: "CIHexagonalPixellate")
-        case .crystallizePixel:
-            return CIFilter(name: "CICrystallize")
+extension CameraSessionManager: AVCaptureVideoDataOutputSampleBufferDelegate {
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        let isVideo = output is AVCaptureVideoDataOutput
+
+        if isVideo, let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+            let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+            let filteredImage = filterProcessor.applyFilter(to: ciImage, filterType: currentFilter)
+
+            let context = CIContext()
+            if let cgImage = context.createCGImage(filteredImage, from: filteredImage.extent) {
+                addToPreviewStream?(cgImage)
+            }
+
+            if videoWritingStarted,
+               let writer = videoWriter,
+               writer.status == .writing,
+               let input = videoWriterInput,
+               let adaptor = pixelBufferAdaptor,
+               input.isReadyForMoreMediaData
+            {
+                if videoWritingStartTime == nil {
+                    videoWritingStartTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+                    writer.startSession(atSourceTime: videoWritingStartTime!)
+                }
+
+                let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+
+                let imageWidth = Int(filteredImage.extent.width)
+                let imageHeight = Int(filteredImage.extent.height)
+                
+                var renderedBuffer: CVPixelBuffer?
+                let attrs: [String: Any] = [
+                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                    kCVPixelBufferWidthKey as String: imageWidth,
+                    kCVPixelBufferHeightKey as String: imageHeight
+                ]
+
+                CVPixelBufferCreate(nil, imageWidth, imageHeight, kCVPixelFormatType_32BGRA, attrs as CFDictionary, &renderedBuffer)
+                if let buffer = renderedBuffer {
+                    context.render(filteredImage, to: buffer)
+                    adaptor.append(buffer, withPresentationTime: timestamp)
+                }
+            }
+        }
+
+        if !isVideo,
+           videoWritingStarted,
+           let input = audioWriterInput,
+           input.isReadyForMoreMediaData
+        {
+            input.append(sampleBuffer)
         }
     }
     
-    var coreImageFilters: [CIFilter] {
-        guard let filter = coreImageFilter else { return [] }
-        return [filter]
+    private func processFrameForRecording(filteredImage: CIImage, sampleBuffer: CMSampleBuffer, output: AVCaptureOutput) {
+        guard let videoWriter = videoWriter,
+              let videoWriterInput = videoWriterInput,
+              videoWriter.status == .writing
+        else {
+            return
+        }
+        
+        let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        
+        if videoWriter.status == .unknown {
+            videoWriter.startSession(atSourceTime: timestamp)
+            videoWritingStartTime = timestamp
+            return
+        }
+        
+        guard videoWriterInput.isReadyForMoreMediaData else {
+            return
+        }
+        
+        _ = createPixelBuffer(from: filteredImage)
+        
+        guard pixelBufferAdaptor != nil else { return }
+        
+        if output is AVCaptureAudioDataOutput,
+           let audioWriterInput = audioWriterInput,
+           audioWriterInput.isReadyForMoreMediaData
+        {
+            audioWriterInput.append(sampleBuffer)
+        }
+    }
+    
+    private func createPixelBuffer(from ciImage: CIImage) -> CVPixelBuffer? {
+        let width = 1280
+        let height = 720
+        
+        var pixelBuffer: CVPixelBuffer?
+        let status = CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            width,
+            height,
+            kCVPixelFormatType_32BGRA,
+            nil,
+            &pixelBuffer
+        )
+        
+        guard status == kCVReturnSuccess, let buffer = pixelBuffer else {
+            return nil
+        }
+        
+        let context = CIContext()
+        context.render(ciImage, to: buffer)
+        
+        return buffer
+    }
+    
+    private func appendPixelBuffer(
+        _ pixelBuffer: CVPixelBuffer,
+        to adaptor: AVAssetWriterInputPixelBufferAdaptor,
+        presentationTime: CMTime
+    ) {
+        adaptor.append(pixelBuffer, withPresentationTime: presentationTime)
     }
 }

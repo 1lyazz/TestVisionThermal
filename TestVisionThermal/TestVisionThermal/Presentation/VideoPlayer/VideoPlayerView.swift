@@ -8,6 +8,7 @@ struct VideoPlayerView: UIViewControllerRepresentable {
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
         let controller = AVPlayerViewController()
+        controller.videoGravity = .resizeAspectFill
         let player = AVPlayer(url: videoURL)
         viewModel.player = player
         controller.player = player
