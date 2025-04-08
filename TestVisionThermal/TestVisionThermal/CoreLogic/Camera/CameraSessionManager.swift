@@ -22,22 +22,25 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
             updatePreviewFilters()
         }
     }
-
-    private(set) var previewLayer: AVCaptureVideoPreviewLayer?
     
-    private let filterProcessor = ImageFilterProcessor()
+    // MARK: - Capture Session
+    
+    let captureSession = AVCaptureSession()
     private let sessionQueue = DispatchQueue(label: "camera.session.queue")
-    private let captureSession = AVCaptureSession()
-    private let photoOutput = AVCapturePhotoOutput()
-    private let movieOutput = AVCaptureMovieFileOutput()
+    
+    // MARK: - Inputs & Outputs
+    
     private var videoInput: AVCaptureDeviceInput?
     private var audioInput: AVCaptureDeviceInput?
-    private var activeCamera: AVCaptureDevice?
-    private var assetWriter: AVAssetWriter?
-    private var captureHandlers = CaptureHandlers()
-    
     private let videoOutput = AVCaptureVideoDataOutput()
+    private let photoOutput = AVCapturePhotoOutput()
+    
+    private var activeCamera: AVCaptureDevice?
+    private var audioWriterInput: AVAssetWriterInput?
+    private var captureHandlers = CaptureHandlers()
+    private let filterProcessor = ImageFilterProcessor()
     private var addToPreviewStream: ((CGImage) -> Void)?
+    private(set) var previewLayer: AVCaptureVideoPreviewLayer?
     lazy var previewStream: AsyncStream<CGImage> = AsyncStream { continuation in
         addToPreviewStream = { cgImage in
             continuation.yield(cgImage)
@@ -47,13 +50,12 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
     private var pixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
     
     private var videoWriter: AVAssetWriter?
-    private var videoWriterInput: AVAssetWriterInput?
-    private var audioWriterInput: AVAssetWriterInput?
     private var videoWritingStarted = false
     private var videoWritingStartTime: CMTime?
+    private var videoWriterInput: AVAssetWriterInput?
     
     // MARK: - Session Setup
-
+    
     func setupSession(completion: @escaping (Result<Void, CameraError>) -> Void) {
         checkPermissions { [weak self] result in
             guard let self = self else { return }
@@ -92,11 +94,24 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
             completion(.failure(.permissionDenied))
         }
     }
-    
+}
+
+// MARK: - Session Configs
+
+extension CameraSessionManager {
     private func configureSession() throws {
         captureSession.beginConfiguration()
         defer { captureSession.commitConfiguration() }
         
+        try configureVideoInput()
+        try configurePhotoOutput()
+        try configureVideoOutput()
+        try configureAudioInput()
+        
+        updateVideoConnectionSettings()
+    }
+    
+    private func configureVideoInput() throws {
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
               let videoInput = try? AVCaptureDeviceInput(device: videoDevice)
         else {
@@ -108,22 +123,15 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
             self.videoInput = videoInput
             activeCamera = videoDevice
         }
-        
+    }
+    
+    private func configurePhotoOutput() throws {
         if captureSession.canAddOutput(photoOutput) {
             captureSession.addOutput(photoOutput)
         }
-        
-        videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
-        if captureSession.canAddOutput(videoOutput) {
-            captureSession.addOutput(videoOutput)
-        }
-        
-        do {
-            try configureAudioInput()
-        } catch {
-            print("Audio configuration failed, continuing without audio: \(error)")
-        }
-        
+    }
+    
+    private func configureVideoOutput() throws {
         videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
         videoOutput.alwaysDiscardsLateVideoFrames = true
         videoOutput.videoSettings = [
@@ -132,15 +140,6 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
         
         if captureSession.canAddOutput(videoOutput) {
             captureSession.addOutput(videoOutput)
-        }
-        
-        if let connection = videoOutput.connection(with: .video) {
-            if connection.isVideoOrientationSupported {
-                connection.videoOrientation = .portrait
-            }
-            if connection.isVideoMirroringSupported {
-                connection.isVideoMirrored = activeCamera?.position == .front
-            }
         }
     }
     
@@ -157,8 +156,21 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
         }
     }
     
-    // MARK: - Camera Controls
+    private func updateVideoConnectionSettings() {
+        if let connection = videoOutput.connection(with: .video) {
+            if connection.isVideoOrientationSupported {
+                connection.videoOrientation = .portrait
+            }
+            if connection.isVideoMirroringSupported {
+                connection.isVideoMirrored = activeCamera?.position == .front
+            }
+        }
+    }
+}
 
+// MARK: - Camera Controls
+
+extension CameraSessionManager {
     func flipCamera() {
         sessionQueue.async { [weak self] in
             guard let self = self,
@@ -183,12 +195,6 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
                 print("Camera flip failed: \(error)")
             }
         }
-    }
-    
-    private func getAlternateCamera() -> AVCaptureDevice? {
-        guard let currentCamera = videoInput?.device else { return nil }
-        let newPosition: AVCaptureDevice.Position = currentCamera.position == .back ? .front : .back
-        return AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition)
     }
     
     func focus(at point: CGPoint) {
@@ -222,98 +228,83 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
         }
     }
     
+    private func getAlternateCamera() -> AVCaptureDevice? {
+        guard let currentCamera = videoInput?.device else { return nil }
+        let newPosition: AVCaptureDevice.Position = currentCamera.position == .back ? .front : .back
+        return AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition)
+    }
+    
     private func updatePreviewFilters() {
         previewLayer?.filters = currentFilter.coreImageFilters
     }
     
     // MARK: - Camera Type Handling
-
+    
     func switchCameraType(to type: CameraType) {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
             
             self.captureSession.beginConfiguration()
             defer { self.captureSession.commitConfiguration() }
-
+            
             for output in self.captureSession.outputs {
                 if output != self.videoOutput {
                     self.captureSession.removeOutput(output)
                 }
             }
-
+            
             if !self.captureSession.outputs.contains(self.videoOutput),
                self.captureSession.canAddOutput(self.videoOutput)
             {
                 self.captureSession.addOutput(self.videoOutput)
             }
-
+            
             switch type {
             case .photoCamera:
                 if self.captureSession.canAddOutput(self.photoOutput) {
                     self.captureSession.addOutput(self.photoOutput)
                 }
             case .videoCamera:
-                self.configureVideoOutput()
+                Task {
+                    try self.configureVideoOutput()
+                }
             }
         }
     }
+}
 
-    private func configureVideoOutput() {
-        guard captureSession.canAddOutput(movieOutput) else { return }
-        captureSession.addOutput(movieOutput)
-        
-        if let connection = movieOutput.connection(with: .video),
-           connection.isVideoStabilizationSupported
-        {
-            connection.preferredVideoStabilizationMode = .auto
-        }
-    }
-    
-    // MARK: - Capture Methods
+// MARK: - Capture Methods
 
+extension CameraSessionManager {
     func capturePhoto(completion: @escaping (Result<UIImage, CameraError>) -> Void) {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
-            
+
             let settings = AVCapturePhotoSettings()
             self.captureHandlers.photoCompletion = { result in
                 switch result {
                 case .success(let image):
-                    let filteredImage = self.filterProcessor.applyFilter(to: image, filterType: self.currentFilter)
-                    completion(.success(filteredImage))
+                    let filtered = self.filterProcessor.applyFilter(to: image, filterType: self.currentFilter)
+                    completion(.success(filtered))
                 case .failure(let error):
                     completion(.failure(error))
                 }
             }
             self.photoOutput.capturePhoto(with: settings, delegate: self)
         }
-        
-        let settings = AVCapturePhotoSettings()
-        settings.previewPhotoFormat = [
-            kCVPixelBufferPixelFormatTypeKey as String: photoOutput.availablePhotoPixelFormatTypes.first!,
-            kCVPixelBufferWidthKey as String: 720,
-            kCVPixelBufferHeightKey as String: 1280
-        ]
     }
     
     func startRecording(completion: @escaping (Result<URL, CameraError>) -> Void) {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
-            
-            guard let documentsDirectory = FileManager.default.urls(
-                for: .documentDirectory,
-                in: .userDomainMask
-            ).first else {
+
+            guard let url = self.makeVideoOutputURL() else {
                 completion(.failure(.fileOutputFailed))
                 return
             }
-            
-            let videoURL = documentsDirectory
-                .appendingPathComponent(UUID().uuidString)
-                .appendingPathExtension("mov")
-            
+
             do {
-                try self.setupVideoWriter(outputURL: videoURL)
+                try self.setupVideoWriter(outputURL: url)
                 self.videoWritingStarted = true
                 self.videoWritingStartTime = nil
                 self.captureHandlers.videoCompletion = completion
@@ -322,6 +313,13 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
                 completion(.failure(.fileOutputFailed))
             }
         }
+    }
+
+    private func makeVideoOutputURL() -> URL? {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+            .first?
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("mov")
     }
     
     private func setupVideoWriter(outputURL: URL) throws {
@@ -383,22 +381,19 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
     func stopRecording() {
         sessionQueue.async { [weak self] in
             guard let self = self, self.videoWritingStarted else { return }
-            
+
             self.videoWritingStarted = false
             self.videoWriterInput?.markAsFinished()
             self.audioWriterInput?.markAsFinished()
-            
+
             self.videoWriter?.finishWriting { [weak self] in
                 DispatchQueue.main.async {
                     self?.isRecording = false
-                    if let url = self?.videoWriter?.outputURL {
-                        self?.captureHandlers.videoCompletion?(.success(url))
-                        print(url)
-                        print("SAVED")
-                    } else {
+                    guard let url = self?.videoWriter?.outputURL else {
                         self?.captureHandlers.videoCompletion?(.failure(.fileOutputFailed))
-                        print("FAILD SAVED")
+                        return
                     }
+                    self?.captureHandlers.videoCompletion?(.success(url))
                     self?.videoWriter = nil
                 }
             }
@@ -406,12 +401,7 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
     }
 }
 
-// MARK: - Capture Handlers
-
-private struct CaptureHandlers {
-    var photoCompletion: ((Result<UIImage, CameraError>) -> Void)?
-    var videoCompletion: ((Result<URL, CameraError>) -> Void)?
-}
+// MARK: - AVCapturePhotoCaptureDelegate
 
 extension CameraSessionManager: AVCapturePhotoCaptureDelegate {
     func photoOutput(
@@ -435,6 +425,8 @@ extension CameraSessionManager: AVCapturePhotoCaptureDelegate {
     }
 }
 
+// MARK: - AVCaptureFileOutputRecordingDelegate
+
 extension CameraSessionManager: AVCaptureFileOutputRecordingDelegate {
     func fileOutput(
         _ output: AVCaptureFileOutput,
@@ -451,6 +443,8 @@ extension CameraSessionManager: AVCaptureFileOutputRecordingDelegate {
         captureHandlers.videoCompletion?(.success(outputFileURL))
     }
 }
+
+// MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
 
 extension CameraSessionManager: AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
