@@ -229,10 +229,9 @@ final class VisionCameraViewModel: ObservableObject {
         let fileManager = FileManager.default
         let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
 
-        let folderName = (type == .photoCamera) ? "Photos" : "Videos"
         let mediaExtensions = (type == .photoCamera) ? ["jpg", "jpeg", "png"] : ["mov", "mp4"]
 
-        let folderURL = documentsURL.appendingPathComponent(folderName)
+        let folderURL = documentsURL
         
         do {
             let fileURLs = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: [.contentModificationDateKey], options: .skipsHiddenFiles)
@@ -266,7 +265,7 @@ final class VisionCameraViewModel: ObservableObject {
                 }
             }
         } catch {
-            print("Error loading the contents of a folder \(folderName): \(error.localizedDescription)")
+            print("Error loading the contents of a folder \(folderURL): \(error.localizedDescription)")
         }
     }
     

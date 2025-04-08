@@ -422,39 +422,35 @@ extension CameraSessionManager {
             return nil
         }
         
-        let photosFolderURL = documentsURL.appendingPathComponent("Photos")
-        
-        if !FileManager.default.fileExists(atPath: photosFolderURL.path) {
+        if !FileManager.default.fileExists(atPath: documentsURL.path) {
             do {
-                try FileManager.default.createDirectory(at: photosFolderURL, withIntermediateDirectories: true, attributes: nil)
+                try FileManager.default.createDirectory(at: documentsURL, withIntermediateDirectories: true, attributes: nil)
             } catch {
                 print("Failed to create a folder: \(error)")
                 return nil
             }
         }
         
-        let fileName = "Image-\(UUID().uuidString).jpg"
-        return photosFolderURL.appendingPathComponent(fileName)
+        let fileName = "Image-\(UUID().uuidString)-\(currentFilter).jpg"
+        return documentsURL.appendingPathComponent(fileName)
     }
     
     private func makeVideoOutputURL() -> URL? {
         guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             return nil
         }
-        
-        let videosFolderURL = documentsURL.appendingPathComponent("Videos")
-        
-        if !FileManager.default.fileExists(atPath: videosFolderURL.path) {
+                
+        if !FileManager.default.fileExists(atPath: documentsURL.path) {
             do {
-                try FileManager.default.createDirectory(at: videosFolderURL, withIntermediateDirectories: true, attributes: nil)
+                try FileManager.default.createDirectory(at: documentsURL, withIntermediateDirectories: true, attributes: nil)
             } catch {
                 print("Failed to create a folder: \(error)")
                 return nil
             }
         }
         
-        let fileName = "Video-\(UUID().uuidString).mov"
-        return videosFolderURL.appendingPathComponent(fileName)
+        let fileName = "Video-\(UUID().uuidString)-\(currentFilter).mov"
+        return documentsURL.appendingPathComponent(fileName)
     }
 
     private func setupVideoWriter(outputURL: URL) throws {
