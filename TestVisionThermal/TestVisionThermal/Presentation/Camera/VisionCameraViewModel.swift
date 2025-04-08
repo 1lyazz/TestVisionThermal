@@ -47,6 +47,7 @@ final class VisionCameraViewModel: ObservableObject {
         coordinator.popView()
         isRecording = false
         stopRecording()
+        cameraSessionManager.stopSessionAndCleanup()
     }
     
     func tapOnCameraButton() {
@@ -256,6 +257,23 @@ final class VisionCameraViewModel: ObservableObject {
         } catch {
             print("Error loading the contents of a folder \(folderName): \(error.localizedDescription)")
         }
+    }
+    
+    func applicationWillResignActive() {
+        if isRecording {
+            isRecording = false
+            stopRecording()
+        }
+        
+        cameraSessionManager.pauseSession()
+        withAnimation {
+            isChangeCameraState = true
+        }
+    }
+
+    func applicationDidBecomeActive() {
+        changeCameraStateEffect()
+        cameraSessionManager.resumeSession()
     }
     
     private func toggleVideoRecording() {

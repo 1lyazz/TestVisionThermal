@@ -42,6 +42,9 @@ struct VisionCameraView: View {
             viewModel.loadLastSavedContentURL(for: viewModel.selectCameraType)
             viewModel.isDisableCameraButton = false
         }
+        .onDisappear {
+            viewModel.cameraSessionManager.stopSessionAndCleanup()
+        }
         .alert(viewModel.alertTitle, isPresented: $viewModel.isShowAlert) {
             Button(Strings.okButtonTitle) {
                 viewModel.isShowAlert = false
@@ -65,6 +68,12 @@ struct VisionCameraView: View {
                     titleColor: .white
                 )
             )
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+            viewModel.applicationWillResignActive()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            viewModel.applicationDidBecomeActive()
         }
     }
     

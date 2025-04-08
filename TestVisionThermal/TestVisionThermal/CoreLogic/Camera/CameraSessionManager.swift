@@ -48,15 +48,28 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol, AVCaptureAudi
         }
     }
     
-    private var pixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
-    
     private var videoWriter: AVAssetWriter?
     private var videoWritingStarted = false
     private var videoWritingStartTime: CMTime?
     private var videoWriterInput: AVAssetWriterInput?
+    private var pixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
     
-    // MARK: - Session Setup
-    
+    func pauseSession() {
+        sessionQueue.async {
+            self.captureSession.stopRunning()
+        }
+    }
+
+    func resumeSession() {
+        sessionQueue.async {
+            self.captureSession.startRunning()
+        }
+    }
+}
+
+// MARK: - Session Setup
+
+extension CameraSessionManager {
     func setupSession(completion: @escaping (Result<Void, CameraError>) -> Void) {
         checkPermissions { [weak self] result in
             guard let self = self else { return }
@@ -98,6 +111,33 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol, AVCaptureAudi
         if AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined {
             AVCaptureDevice.requestAccess(for: .audio) { _ in
             }
+        }
+    }
+    
+    func stopSessionAndCleanup() {
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+
+            if self.captureSession.isRunning {
+                self.captureSession.stopRunning()
+            }
+
+            for input in self.captureSession.inputs {
+                self.captureSession.removeInput(input)
+            }
+
+            for output in self.captureSession.outputs {
+                self.captureSession.removeOutput(output)
+            }
+
+            self.previewLayer = nil
+            self.videoInput = nil
+            self.audioInput = nil
+            self.activeCamera = nil
+            self.videoWriter = nil
+            self.videoWriterInput = nil
+            self.pixelBufferAdaptor = nil
+            self.addToPreviewStream = nil
         }
     }
 }
