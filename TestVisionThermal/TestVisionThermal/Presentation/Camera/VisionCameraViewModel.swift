@@ -19,6 +19,7 @@ final class VisionCameraViewModel: ObservableObject {
     @Published var cameraError: CameraError?
     @Published var isCameraVisible: Bool = true
     @Published var lastContentURL: URL?
+    @Published var lastContentName: String?
     @Published var contentThumbnail: UIImage?
     
     var alertTitle: String = ""
@@ -32,7 +33,6 @@ final class VisionCameraViewModel: ObservableObject {
     init(coordinator: Coordinator) {
         self.coordinator = coordinator
         checkCameraAccess()
-        loadLastSavedContentURL(for: selectCameraType)
     }
     
     deinit {
@@ -76,6 +76,7 @@ final class VisionCameraViewModel: ObservableObject {
                     let contentName = url.lastPathComponent
                     self.coordinator.pushResultView(photo: image, contentName: contentName)
                     self.lastContentURL = url
+                    self.lastContentName = contentName
                     self.loadLastSavedContentURL(for: selectCameraType)
                 case .failure(let error):
                     self.alertTitle = Strings.goSettingsButtonTitle
@@ -86,6 +87,23 @@ final class VisionCameraViewModel: ObservableObject {
             }
         }
         #endif
+    }
+    
+    func tapOnThumbnail() {
+        if selectCameraType == .photoCamera {
+            coordinator.pushResultView(
+                photo: contentThumbnail,
+                photoURL: lastContentURL,
+                contentName: lastContentName ?? "",
+                fromThumbnail: true
+            )
+        } else {
+            coordinator.pushResultView(
+                video: lastContentURL,
+                contentName: lastContentName ?? "",
+                fromThumbnail: true
+            )
+        }
     }
     
     func tapOnFlipButton() {
@@ -195,6 +213,51 @@ final class VisionCameraViewModel: ObservableObject {
         }
     }
     
+    func loadLastSavedContentURL(for type: CameraType) {
+        let fileManager = FileManager.default
+        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+
+        let folderName = (type == .photoCamera) ? "Photos" : "Videos"
+        let mediaExtensions = (type == .photoCamera) ? ["jpg", "jpeg", "png"] : ["mov", "mp4"]
+
+        let folderURL = documentsURL.appendingPathComponent(folderName)
+        
+        do {
+            let fileURLs = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: [.contentModificationDateKey], options: .skipsHiddenFiles)
+
+            let mediaFiles = fileURLs.filter { mediaExtensions.contains($0.pathExtension.lowercased()) }
+
+            let sortedFiles = try mediaFiles.sorted {
+                let attr1 = try $0.resourceValues(forKeys: [.contentModificationDateKey])
+                let attr2 = try $1.resourceValues(forKeys: [.contentModificationDateKey])
+                return (attr1.contentModificationDate ?? .distantPast) > (attr2.contentModificationDate ?? .distantPast)
+            }
+
+            if let lastFile = sortedFiles.first {
+                DispatchQueue.main.async { [weak self] in
+                    self?.lastContentURL = lastFile
+                    self?.lastContentName = lastFile.lastPathComponent
+
+                    switch type {
+                    case .photoCamera:
+                        if let image = UIImage(contentsOfFile: lastFile.path) {
+                            self?.contentThumbnail = image
+                        } else {
+                            self?.contentThumbnail = nil
+                        }
+
+                    case .videoCamera:
+                        self?.generateThumbnail(for: lastFile) { [weak self] image in
+                            self?.contentThumbnail = image
+                        }
+                    }
+                }
+            }
+        } catch {
+            print("Error loading the contents of a folder \(folderName): \(error.localizedDescription)")
+        }
+    }
+    
     private func toggleVideoRecording() {
         #if targetEnvironment(simulator)
         if !isRecording {
@@ -227,6 +290,7 @@ final class VisionCameraViewModel: ObservableObject {
                 let contentName = url.lastPathComponent
                 self.coordinator.pushResultView(video: url, contentName: contentName)
                 self.lastContentURL = url
+                self.lastContentName = contentName
                 self.loadLastSavedContentURL(for: selectCameraType)
             case .failure(let error):
                 self.alertTitle = Strings.wrongAccessTitle
@@ -279,50 +343,6 @@ final class VisionCameraViewModel: ObservableObject {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.isChangeCameraState = false
             }
-        }
-    }
-    
-    private func loadLastSavedContentURL(for type: CameraType) {
-        let fileManager = FileManager.default
-        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-
-        let folderName = (type == .photoCamera) ? "Photos" : "Videos"
-        let mediaExtensions = (type == .photoCamera) ? ["jpg", "jpeg", "png"] : ["mov", "mp4"]
-
-        let folderURL = documentsURL.appendingPathComponent(folderName)
-        
-        do {
-            let fileURLs = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: [.contentModificationDateKey], options: .skipsHiddenFiles)
-
-            let mediaFiles = fileURLs.filter { mediaExtensions.contains($0.pathExtension.lowercased()) }
-
-            let sortedFiles = try mediaFiles.sorted {
-                let attr1 = try $0.resourceValues(forKeys: [.contentModificationDateKey])
-                let attr2 = try $1.resourceValues(forKeys: [.contentModificationDateKey])
-                return (attr1.contentModificationDate ?? .distantPast) > (attr2.contentModificationDate ?? .distantPast)
-            }
-
-            if let lastFile = sortedFiles.first {
-                DispatchQueue.main.async { [weak self] in
-                    self?.lastContentURL = lastFile
-
-                    switch type {
-                    case .photoCamera:
-                        if let image = UIImage(contentsOfFile: lastFile.path) {
-                            self?.contentThumbnail = image
-                        } else {
-                            self?.contentThumbnail = nil
-                        }
-
-                    case .videoCamera:
-                        self?.generateThumbnail(for: lastFile) { [weak self] image in
-                            self?.contentThumbnail = image
-                        }
-                    }
-                }
-            }
-        } catch {
-            print("Error loading the contents of a folder \(folderName): \(error.localizedDescription)")
         }
     }
 

@@ -4,11 +4,14 @@ import SwiftUI
 final class CameraResultViewModel: ObservableObject {
     @Published var photo: UIImage?
     @Published var videoURL: URL?
+    @Published var photoURL: URL?
     @Published var contentName: String
     @Published var isShowAlert = false
     @Published var isShowToast = false
-    @Published var isOnSettingsButton = false
+    @Published var isOnSettingsButton = true
     @Published var videoThumbnail: UIImage?
+    @Published var fromThumbnail: Bool = false
+    @Published var alertType: AlertType = .ok
 
     var alertTitle: String = ""
     var alertDescription: String = ""
@@ -17,11 +20,13 @@ final class CameraResultViewModel: ObservableObject {
     private let coordinator: Coordinator
     private let hapticGen = HapticGen.shared
 
-    init(coordinator: Coordinator, photo: UIImage? = nil, videoURL: URL? = nil, contentName: String) {
+    init(coordinator: Coordinator, photo: UIImage? = nil, videoURL: URL? = nil, photoURL: URL? = nil, contentName: String, fromThumbnail: Bool) {
         self.coordinator = coordinator
         self.photo = photo
         self.videoURL = videoURL
+        self.photoURL = photoURL
         self.contentName = contentName
+        self.fromThumbnail = fromThumbnail
 
         getThumbnail()
     }
@@ -50,6 +55,7 @@ final class CameraResultViewModel: ObservableObject {
                 case .denied, .restricted, .notDetermined:
                     self.alertTitle = Strings.noPhotosAccessTitle
                     self.alertDescription = Strings.noPhotosAccessDescription
+                    self.alertType = .ok
                     self.isShowAlert = true
 
                 case .limited:
@@ -63,10 +69,29 @@ final class CameraResultViewModel: ObservableObject {
                 @unknown default:
                     self.alertTitle = Strings.noPhotosAccessTitle
                     self.alertDescription = Strings.noPhotosAccessDescription
+                    self.alertType = .ok
                     self.isShowAlert = true
                 }
             }
         }
+    }
+
+    func tapOnDeleteButton() {
+        hapticGen.setUpHaptic()
+        alertTitle = Strings.deleteAlertTitle
+        alertDescription = Strings.deleteAlertDescription
+        alertType = .cancel
+        isShowAlert = true
+    }
+
+    func deleteContent() {
+        if let videoURL = videoURL {
+            try? FileManager.default.removeItem(at: videoURL)
+        } else if let photoURL = photoURL {
+            try? FileManager.default.removeItem(at: photoURL)
+        }
+
+        coordinator.popView()
     }
 
     private func getThumbnail() {

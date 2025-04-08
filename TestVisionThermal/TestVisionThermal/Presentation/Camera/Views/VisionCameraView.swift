@@ -39,6 +39,7 @@ struct VisionCameraView: View {
         }
         .edgesIgnoringSafeArea(.all)
         .onAppear {
+            viewModel.loadLastSavedContentURL(for: viewModel.selectCameraType)
             viewModel.isDisableCameraButton = false
         }
         .alert(viewModel.alertTitle, isPresented: $viewModel.isShowAlert) {
@@ -115,6 +116,9 @@ struct VisionCameraView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 4))
                         .animation(.default, value: viewModel.contentThumbnail)
                         .transition(.opacity)
+                        .onTapGesture {
+                            viewModel.tapOnThumbnail()
+                        }
                     
                     Spacer()
                     

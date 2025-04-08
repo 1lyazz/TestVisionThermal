@@ -8,7 +8,7 @@ struct CameraResultView: View {
     
     var body: some View {
         ZStack {
-            Color.black090909
+            Color.black090909.ignoresSafeArea(.all)
             
             VStack(spacing: 0) {
                 navigationBar
@@ -17,22 +17,46 @@ struct CameraResultView: View {
                 
                 Spacer()
                 
-                saveButton
+                mainButton
             }
         }
         .edgesIgnoringSafeArea(.top)
-        .alert(viewModel.alertTitle, isPresented: $viewModel.isShowAlert) {
-            Button(Strings.okButtonTitle) {
-                viewModel.isShowAlert = false
-            }
-            
-            if viewModel.isOnSettingsButton {
-                Button(Strings.settingsButtonTitle) {
-                    UIApplication.shared.openPhoneSettings()
+        .alert(isPresented: $viewModel.isShowAlert) {
+            switch viewModel.alertType {
+            case .ok:
+                if viewModel.isOnSettingsButton {
+                    return Alert(
+                        title: Text(viewModel.alertTitle),
+                        message: Text(viewModel.alertDescription),
+                        primaryButton: .cancel(Text(Strings.okButtonTitle)) {
+                            viewModel.isShowAlert = false
+                        },
+                        secondaryButton: .default(Text(Strings.settingsButtonTitle)) {
+                            UIApplication.shared.openPhoneSettings()
+                        }
+                    )
+                } else {
+                    return Alert(
+                        title: Text(viewModel.alertTitle),
+                        message: Text(viewModel.alertDescription),
+                        dismissButton: .cancel(Text(Strings.okButtonTitle)) {
+                            viewModel.isShowAlert = false
+                        }
+                    )
                 }
+            case .cancel:
+                return Alert(
+                    title: Text(viewModel.alertTitle),
+                    message: Text(viewModel.alertDescription),
+                    primaryButton: .cancel(Text(Strings.cancelButtonTitle)) {
+                        viewModel.isShowAlert = false
+                    },
+                    secondaryButton: .destructive(Text(Strings.deleteButtonTitle)) {
+                        viewModel.isShowAlert = false
+                        viewModel.deleteContent()
+                    }
+                )
             }
-        } message: {
-            Text(viewModel.alertDescription)
         }
         .toast(isPresenting: $viewModel.isShowToast) {
             AlertToast(
@@ -64,7 +88,11 @@ struct CameraResultView: View {
                     
                 Spacer()
                     
-                shareButton
+                if viewModel.fromThumbnail == false {
+                    shareButton
+                } else {
+                    CircleButton(icon: .binIcon) { viewModel.tapOnDeleteButton() }
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 2)
@@ -99,9 +127,19 @@ struct CameraResultView: View {
         .padding(.top, 4)
     }
     
-    private var saveButton: some View {
-        MainButton(title: Strings.saveToGalleryButtonTitle, icon: .saveIcon) {
-            viewModel.tapOnSaveButton()
+    private var mainButton: some View {
+        ZStack {
+            if viewModel.fromThumbnail == false {
+                MainButton(title: Strings.saveToGalleryButtonTitle, icon: .saveIcon) {
+                    viewModel.tapOnSaveButton()
+                }
+            } else {
+                shareButton
+                    .frame(height: 54)
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                    .clipped()
+            }
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 13)
@@ -111,32 +149,56 @@ struct CameraResultView: View {
         Group {
             if let photo = viewModel.photo {
                 ShareLinkButton(item: photo, title: String(viewModel.contentName.prefix(14))) {
-                    Circle()
-                        .stroke(.tertiary99889C, lineWidth: 1)
-                        .background(Circle().fill(.clear))
-                        .frame(width: 40, height: 40)
-                        .overlay {
-                            Image(.shareIcon)
-                                .resizable()
-                                .scaleEffect(0.5)
-                        }
+                    shareButtonLabel
                 }
             } else if let videoURL = viewModel.videoURL {
                 ShareLink(
                     item: videoURL,
                     preview: SharePreview(viewModel.contentName.prefix(14), image: Image(uiImage: viewModel.videoThumbnail ?? .cameraIcon)),
                     label: {
-                        Circle()
-                            .stroke(.tertiary99889C, lineWidth: 1)
-                            .background(Circle().fill(.clear))
-                            .frame(width: 40, height: 40)
-                            .overlay {
-                                Image(.shareIcon)
-                                    .resizable()
-                                    .scaleEffect(0.5)
-                            }
+                        shareButtonLabel
                     }
                 )
+            }
+        }
+    }
+    
+    private var shareButtonLabel: some View {
+        ZStack {
+            if viewModel.fromThumbnail == false {
+                Circle()
+                    .stroke(.tertiary99889C, lineWidth: 1)
+                    .background(Circle().fill(.clear))
+                    .frame(width: 40, height: 40)
+                    .overlay {
+                        Image(.shareIcon)
+                            .resizable()
+                            .scaleEffect(0.5)
+                    }
+            } else {
+                RoundedRectangle(cornerRadius: 28)
+                    .foregroundStyle(.primaryB827CE)
+
+                RoundedRectangle(cornerRadius: 40)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.7), .purple540560],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 5
+                    )
+                    .blur(radius: 6)
+                
+                HStack(spacing: 8) {
+                    Image(.shareIcon)
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                    
+                    Text(Strings.shareButtonTitle)
+                        .font(Fonts.SFProDisplay.semibold.swiftUIFont(size: 17))
+                        .foregroundStyle(.white)
+                }
             }
         }
     }

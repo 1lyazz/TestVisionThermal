@@ -10,6 +10,14 @@ import Foundation
 // swiftlint:disable explicit_type_interface function_parameter_count identifier_name line_length
 // swiftlint:disable nesting type_body_length type_name vertical_whitespace_opening_braces
 internal enum Strings {
+  /// Cancel
+  internal static let cancelButtonTitle = Strings.tr("Localizable", "cancelButtonTitle", fallback: "Cancel")
+  /// This action cannot be reversed
+  internal static let deleteAlertDescription = Strings.tr("Localizable", "deleteAlertDescription", fallback: "This action cannot be reversed")
+  /// Do you really want to delete?
+  internal static let deleteAlertTitle = Strings.tr("Localizable", "deleteAlertTitle", fallback: "Do you really want to delete?")
+  /// Delete
+  internal static let deleteButtonTitle = Strings.tr("Localizable", "deleteButtonTitle", fallback: "Delete")
   /// Go to settings
   internal static let goSettingsButtonTitle = Strings.tr("Localizable", "goSettingsButtonTitle", fallback: "Go to settings")
   /// History
@@ -38,6 +46,8 @@ internal enum Strings {
   internal static let saveToGalleryButtonTitle = Strings.tr("Localizable", "saveToGalleryButtonTitle", fallback: "Save to Gallery")
   /// Settings
   internal static let settingsButtonTitle = Strings.tr("Localizable", "settingsButtonTitle", fallback: "Settings")
+  /// Share
+  internal static let shareButtonTitle = Strings.tr("Localizable", "shareButtonTitle", fallback: "Share")
   /// Without Audio
   internal static let withoutAudioTitle = Strings.tr("Localizable", "withoutAudioTitle", fallback: "Without Audio")
   /// Something went wrong :(
