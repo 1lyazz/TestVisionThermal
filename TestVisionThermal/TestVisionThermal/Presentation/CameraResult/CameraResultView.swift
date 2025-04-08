@@ -56,7 +56,11 @@ struct CameraResultView: View {
                     
                 Spacer()
                     
-                Text("Image1")
+                Text(viewModel.contentName.prefix(14))
+                    .font(Fonts.SFProDisplay.semibold.swiftUIFont(size: 17))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .padding(.horizontal, 16)
                     
                 Spacer()
                     
@@ -106,7 +110,7 @@ struct CameraResultView: View {
     private var shareButton: some View {
         Group {
             if let photo = viewModel.photo {
-                ShareLinkButton(item: photo, title: UIApplication.shared.appName) {
+                ShareLinkButton(item: photo, title: String(viewModel.contentName.prefix(14))) {
                     Circle()
                         .stroke(.tertiary99889C, lineWidth: 1)
                         .background(Circle().fill(.clear))
@@ -118,17 +122,21 @@ struct CameraResultView: View {
                         }
                 }
             } else if let videoURL = viewModel.videoURL {
-                ShareLinkButton(item: videoURL, icon: viewModel.videoThumbnail, title: UIApplication.shared.appName) {
-                    Circle()
-                        .stroke(.tertiary99889C, lineWidth: 1)
-                        .background(Circle().fill(.clear))
-                        .frame(width: 40, height: 40)
-                        .overlay {
-                            Image(.shareIcon)
-                                .resizable()
-                                .scaleEffect(0.5)
-                        }
-                }
+                ShareLink(
+                    item: videoURL,
+                    preview: SharePreview(viewModel.contentName.prefix(14), image: Image(uiImage: viewModel.videoThumbnail ?? .cameraIcon)),
+                    label: {
+                        Circle()
+                            .stroke(.tertiary99889C, lineWidth: 1)
+                            .background(Circle().fill(.clear))
+                            .frame(width: 40, height: 40)
+                            .overlay {
+                                Image(.shareIcon)
+                                    .resizable()
+                                    .scaleEffect(0.5)
+                            }
+                    }
+                )
             }
         }
     }

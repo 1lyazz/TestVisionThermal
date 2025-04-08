@@ -6,7 +6,7 @@ protocol CameraManagerProtocol: AnyObject, ObservableObject {
     var previewLayer: AVCaptureVideoPreviewLayer? { get }
 
     func setupSession(completion: @escaping (Result<Void, CameraError>) -> Void)
-    func capturePhoto(completion: @escaping (Result<UIImage, CameraError>) -> Void)
+    func capturePhoto(completion: @escaping (Result<(UIImage, URL), CameraError>) -> Void)
     func startRecording(completion: @escaping (Result<URL, CameraError>) -> Void)
     func stopRecording()
     func flipCamera()
@@ -14,7 +14,7 @@ protocol CameraManagerProtocol: AnyObject, ObservableObject {
     func switchCameraType(to type: CameraType)
 }
 
-final class CameraSessionManager: NSObject, CameraManagerProtocol {
+final class CameraSessionManager: NSObject, CameraManagerProtocol, AVCaptureAudioDataOutputSampleBufferDelegate {
     @Published private(set) var isRecording = false
     @Published private(set) var currentFilter: CameraFilterType = .original {
         didSet {
@@ -33,6 +33,7 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
     private var audioInput: AVCaptureDeviceInput?
     private let videoOutput = AVCaptureVideoDataOutput()
     private let photoOutput = AVCapturePhotoOutput()
+    private let audioOutput = AVCaptureAudioDataOutput()
     
     private var activeCamera: AVCaptureDevice?
     private var audioWriterInput: AVAssetWriterInput?
@@ -112,6 +113,7 @@ extension CameraSessionManager {
         try configurePhotoOutput()
         try configureVideoOutput()
         try configureAudioInput()
+        try configureAudioOutput()
         
         updateVideoConnectionSettings()
     }
@@ -162,6 +164,13 @@ extension CameraSessionManager {
         if captureSession.canAddInput(audioInput) {
             captureSession.addInput(audioInput)
             self.audioInput = audioInput
+        }
+    }
+    
+    private func configureAudioOutput() throws {
+        audioOutput.setSampleBufferDelegate(self, queue: sessionQueue)
+        if captureSession.canAddOutput(audioOutput) {
+            captureSession.addOutput(audioOutput)
         }
     }
     
@@ -315,7 +324,7 @@ extension CameraSessionManager {
 // MARK: - Capture Methods
 
 extension CameraSessionManager {
-    func capturePhoto(completion: @escaping (Result<UIImage, CameraError>) -> Void) {
+    func capturePhoto(completion: @escaping (Result<(UIImage, URL), CameraError>) -> Void) {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
 
@@ -324,7 +333,21 @@ extension CameraSessionManager {
                 switch result {
                 case .success(let image):
                     let filtered = self.filterProcessor.applyFilter(to: image, filterType: self.currentFilter)
-                    completion(.success(filtered))
+                    
+                    guard let url = self.makePhotoOutputURL(),
+                          let data = filtered.jpegData(compressionQuality: 1.0)
+                    else {
+                        completion(.failure(.fileOutputFailed))
+                        return
+                    }
+                    
+                    do {
+                        try data.write(to: url)
+                        completion(.success((filtered, url)))
+                    } catch {
+                        completion(.failure(.fileOutputFailed))
+                    }
+                    
                 case .failure(let error):
                     completion(.failure(error))
                 }
@@ -353,14 +376,47 @@ extension CameraSessionManager {
             }
         }
     }
-
-    private func makeVideoOutputURL() -> URL? {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-            .first?
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension("mov")
+    
+    private func makePhotoOutputURL() -> URL? {
+        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        
+        let photosFolderURL = documentsURL.appendingPathComponent("Photos")
+        
+        if !FileManager.default.fileExists(atPath: photosFolderURL.path) {
+            do {
+                try FileManager.default.createDirectory(at: photosFolderURL, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                print("Failed to create a folder: \(error)")
+                return nil
+            }
+        }
+        
+        let fileName = "Image-\(UUID().uuidString).jpg"
+        return photosFolderURL.appendingPathComponent(fileName)
     }
     
+    private func makeVideoOutputURL() -> URL? {
+        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        
+        let videosFolderURL = documentsURL.appendingPathComponent("Videos")
+        
+        if !FileManager.default.fileExists(atPath: videosFolderURL.path) {
+            do {
+                try FileManager.default.createDirectory(at: videosFolderURL, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                print("Failed to create a folder: \(error)")
+                return nil
+            }
+        }
+        
+        let fileName = "Video-\(UUID().uuidString).mov"
+        return videosFolderURL.appendingPathComponent(fileName)
+    }
+
     private func setupVideoWriter(outputURL: URL) throws {
         let writer = try AVAssetWriter(outputURL: outputURL, fileType: .mov)
         

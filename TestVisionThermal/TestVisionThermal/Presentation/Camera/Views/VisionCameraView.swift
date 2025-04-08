@@ -109,9 +109,11 @@ struct VisionCameraView: View {
             
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
-                    CircleButton(icon: .backIcon) { viewModel.tapOnBackButton() }
-                        .opacity(viewModel.isRecording ? 0 : 1)
-                        .animation(.default, value: viewModel.isRecording)
+                    Image(uiImage: viewModel.contentThumbnail ?? .emptyThumbnail)
+                        .resizable()
+                        .frame(width: 40, height: 50)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                        .animation(.default, value: viewModel.contentThumbnail)
                         .transition(.opacity)
                     
                     Spacer()

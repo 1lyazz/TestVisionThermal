@@ -4,6 +4,7 @@ import SwiftUI
 final class CameraResultViewModel: ObservableObject {
     @Published var photo: UIImage?
     @Published var videoURL: URL?
+    @Published var contentName: String
     @Published var isShowAlert = false
     @Published var isShowToast = false
     @Published var isOnSettingsButton = false
@@ -16,10 +17,11 @@ final class CameraResultViewModel: ObservableObject {
     private let coordinator: Coordinator
     private let hapticGen = HapticGen.shared
 
-    init(coordinator: Coordinator, photo: UIImage? = nil, videoURL: URL? = nil) {
+    init(coordinator: Coordinator, photo: UIImage? = nil, videoURL: URL? = nil, contentName: String) {
         self.coordinator = coordinator
         self.photo = photo
         self.videoURL = videoURL
+        self.contentName = contentName
 
         getThumbnail()
     }
