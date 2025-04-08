@@ -17,6 +17,7 @@ final class VisionCameraViewModel: ObservableObject {
     @Published var isCameraAccess = true
     @Published var isChangeCameraState = false
     @Published var cameraError: CameraError?
+    @Published var isCameraVisible: Bool = true
     
     var alertTitle: String = ""
     var alertDescription: String = ""
@@ -31,8 +32,15 @@ final class VisionCameraViewModel: ObservableObject {
         checkCameraAccess()
     }
     
+    deinit {
+        turnOffFlash()
+        isCameraVisible = false
+    }
+    
     func tapOnBackButton() {
         hapticGen.setUpHaptic()
+        turnOffFlash()
+        isCameraVisible = false
         coordinator.popView()
         isRecording = false
         stopRecording()
@@ -64,7 +72,7 @@ final class VisionCameraViewModel: ObservableObject {
                 case .success(let image):
                     self.coordinator.pushResultView(photo: image)
                 case .failure(let error):
-                    self.alertTitle = Strings.wrongAccessTitle
+                    self.alertTitle = Strings.goSettingsButtonTitle
                     self.alertDescription = error.localizedDescription
                     self.isShowAlert = true
                 }
@@ -103,7 +111,6 @@ final class VisionCameraViewModel: ObservableObject {
                         self?.switchToCameraType(cameraType)
                         self?.alertTitle = Strings.noMicrophoneAccessTitle
                         self?.alertDescription = Strings.noMicrophoneDescription
-                        self?.isShowAlert = true
                     }
                 }
             }
@@ -112,7 +119,6 @@ final class VisionCameraViewModel: ObservableObject {
             switchToCameraType(cameraType)
             alertTitle = Strings.noMicrophoneAccessTitle
             alertDescription = Strings.noMicrophoneDescription
-            isShowAlert = true
         case .granted:
             switchToCameraType(cameraType)
         @unknown default:
@@ -120,7 +126,6 @@ final class VisionCameraViewModel: ObservableObject {
             switchToCameraType(cameraType)
             alertTitle = Strings.noMicrophoneAccessTitle
             alertDescription = Strings.noMicrophoneDescription
-            isShowAlert = true
         }
     }
     
@@ -137,8 +142,10 @@ final class VisionCameraViewModel: ObservableObject {
         hapticGen.setUpHaptic()
         
         DispatchQueue.main.async { [weak self] in
-            self?.selectedFilter = filterType
-            self?.cameraSessionManager.setCurrentFilter(filterType)
+            withAnimation {
+                self?.selectedFilter = filterType
+                self?.cameraSessionManager.setCurrentFilter(filterType)
+            }
         }
     }
     
@@ -162,6 +169,21 @@ final class VisionCameraViewModel: ObservableObject {
             device.unlockForConfiguration()
         } catch {
             print("Flash error: \(error)")
+        }
+    }
+    
+    func turnOffFlash() {
+        guard let device = AVCaptureDevice.default(for: .video), device.hasTorch else { return }
+        
+        do {
+            try device.lockForConfiguration()
+            if device.torchMode == .on {
+                device.torchMode = .off
+                isFlashOn = false
+            }
+            device.unlockForConfiguration()
+        } catch {
+            print("Failed to turn off flash: \(error)")
         }
     }
     

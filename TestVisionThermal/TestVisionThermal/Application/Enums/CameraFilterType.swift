@@ -11,11 +11,8 @@ enum CameraFilterType: String, CaseIterable {
     case neon
     case chrome
     case spotColor
-    case draw
     case halftone
     case invert
-    case blur
-    case motionBlur
     case pixel
     case circlePixel
     case crystallizePixel
@@ -32,11 +29,8 @@ enum CameraFilterType: String, CaseIterable {
         case .neon: "Neon"
         case .chrome: "Chrome"
         case .spotColor: "Spot Color"
-        case .draw: "Draw"
         case .halftone: "Halftone"
         case .invert: "Invert"
-        case .blur: "Blur"
-        case .motionBlur: "Motion Blur"
         case .pixel: "Pixel"
         case .circlePixel: "Circle Pixel"
         case .crystallizePixel: "Crystallize"
@@ -74,12 +68,6 @@ extension CameraFilterType {
             return CIFilter(name: "CIPhotoEffectChrome")
         case .spotColor:
             return CIFilter(name: "CISpotColor")
-        case .draw:
-            return CIFilter(name: "CIEdgeWork")
-        case .blur:
-            return CIFilter(name: "CIDiscBlur")
-        case .motionBlur:
-            return CIFilter(name: "CIMotionBlur")
         case .pixel:
             return CIFilter(name: "CIPixellate")
         case .circlePixel:

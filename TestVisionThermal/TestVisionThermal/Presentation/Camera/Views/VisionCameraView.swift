@@ -11,6 +11,7 @@ struct VisionCameraView: View {
             if viewModel.isCameraAccess {
                 CameraView(cameraSessionManager: viewModel.cameraSessionManager, error: $viewModel.cameraError)
                     .blur(radius: viewModel.isChangeCameraState ? 10 : 0)
+                    .opacity(viewModel.isCameraVisible ? 1 : 0)
             }
             
             VStack(spacing: 0) {
@@ -163,7 +164,7 @@ struct VisionCameraView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 8)
                 .frame(width: 74, height: 27)
-                .foregroundStyle(viewModel.isRecording ? .redCE272A.opacity(0.7) : .black090909.opacity(0.7))
+                .foregroundStyle(viewModel.isRecording ? (viewModel.selectedFilter == .original ? .redCE272A.opacity(0.7) : .redCE272A) : .black090909.opacity(0.7))
                 .animation(.default, value: viewModel.isRecording)
                 .transition(.opacity)
             

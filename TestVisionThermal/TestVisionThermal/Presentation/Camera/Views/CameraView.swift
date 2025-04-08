@@ -39,6 +39,12 @@ struct CameraView: UIViewControllerRepresentable {
         viewController.view.addGestureRecognizer(tapGesture)
         viewController.view.isUserInteractionEnabled = true
         
+        let pinchGesture = UIPinchGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handlePinch(_:))
+        )
+        viewController.view.addGestureRecognizer(pinchGesture)
+        
         return viewController
     }
     
@@ -62,6 +68,18 @@ struct CameraView: UIViewControllerRepresentable {
         
         init(cameraSessionManager: CameraSessionManager) {
             self.cameraSessionManager = cameraSessionManager
+        }
+        
+        @objc func handlePinch(_ gesture: UIPinchGestureRecognizer) {
+            switch gesture.state {
+            case .began:
+                cameraSessionManager.updateInitialZoom()
+            case .changed:
+                let scale = gesture.scale
+                cameraSessionManager.setZoom(scale)
+            default:
+                break
+            }
         }
         
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {

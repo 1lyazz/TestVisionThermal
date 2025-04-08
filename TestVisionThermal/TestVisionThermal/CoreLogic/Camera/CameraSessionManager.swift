@@ -1,5 +1,4 @@
 import AVFoundation
-import CoreImage.CIFilterBuiltins
 import UIKit
 
 protocol CameraManagerProtocol: AnyObject, ObservableObject {
@@ -37,6 +36,7 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
     
     private var activeCamera: AVCaptureDevice?
     private var audioWriterInput: AVAssetWriterInput?
+    private var initialZoom: CGFloat = 1.0
     private var captureHandlers = CaptureHandlers()
     private let filterProcessor = ImageFilterProcessor()
     private var addToPreviewStream: ((CGImage) -> Void)?
@@ -93,6 +93,11 @@ final class CameraSessionManager: NSObject, CameraManagerProtocol {
         default:
             completion(.failure(.permissionDenied))
         }
+        
+        if AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined {
+            AVCaptureDevice.requestAccess(for: .audio) { _ in
+            }
+        }
     }
 }
 
@@ -144,10 +149,14 @@ extension CameraSessionManager {
     }
     
     private func configureAudioInput() throws {
-        guard let audioDevice = AVCaptureDevice.default(for: .audio),
+        let audioStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        
+        guard audioStatus == .authorized,
+              let audioDevice = AVCaptureDevice.default(for: .audio),
               let audioInput = try? AVCaptureDeviceInput(device: audioDevice)
         else {
-            throw CameraError.deviceSetupFailed
+            print("Microphone access not granted, proceeding without audio")
+            return
         }
         
         if captureSession.canAddInput(audioInput) {
@@ -186,11 +195,16 @@ extension CameraSessionManager {
                     self.captureSession.addInput(newInput)
                     self.videoInput = newInput
                     self.activeCamera = newDevice
+                    self.updateVideoConnectionSettings()
                 } else {
                     self.captureSession.addInput(currentInput)
                 }
                 
                 self.captureSession.commitConfiguration()
+                
+                DispatchQueue.main.async {
+                    self.previewLayer?.connection?.videoOrientation = .portrait
+                }
             } catch {
                 print("Camera flip failed: \(error)")
             }
@@ -207,12 +221,12 @@ extension CameraSessionManager {
                 
                 if device.isFocusPointOfInterestSupported {
                     device.focusPointOfInterest = point
-                    device.focusMode = .autoFocus
+                    device.focusMode = .continuousAutoFocus
                 }
                 
                 if device.isExposurePointOfInterestSupported {
                     device.exposurePointOfInterest = point
-                    device.exposureMode = .autoExpose
+                    device.exposureMode = .continuousAutoExposure
                 }
             } catch {
                 print("Focus error: \(error)")
@@ -226,6 +240,31 @@ extension CameraSessionManager {
                 self?.currentFilter = filter
             }
         }
+    }
+    
+    func setZoom(_ scale: CGFloat) {
+        sessionQueue.async { [weak self] in
+            guard let self = self,
+                  let device = self.activeCamera else { return }
+            
+            let minZoom = device.minAvailableVideoZoomFactor
+            let maxZoom = device.maxAvailableVideoZoomFactor
+            let newZoom = self.initialZoom * scale
+            
+            do {
+                try device.lockForConfiguration()
+                defer { device.unlockForConfiguration() }
+                
+                device.videoZoomFactor = max(minZoom, min(newZoom, maxZoom))
+            } catch {
+                print("Zoom error: \(error)")
+            }
+        }
+    }
+    
+    func updateInitialZoom() {
+        guard let device = activeCamera else { return }
+        initialZoom = device.videoZoomFactor
     }
     
     private func getAlternateCamera() -> AVCaptureDevice? {
@@ -327,8 +366,8 @@ extension CameraSessionManager {
         
         let videoSettings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: 720,
-            AVVideoHeightKey: 1280,
+            AVVideoWidthKey: 1080,
+            AVVideoHeightKey: 1920,
             AVVideoCompressionPropertiesKey: [
                 AVVideoAverageBitRateKey: 6000000,
                 AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel
@@ -350,28 +389,30 @@ extension CameraSessionManager {
             assetWriterInput: videoInput,
             sourcePixelBufferAttributes: [
                 kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-                kCVPixelBufferWidthKey as String: 1280,
-                kCVPixelBufferHeightKey as String: 720
+                kCVPixelBufferWidthKey as String: 1080,
+                kCVPixelBufferHeightKey as String: 1920
             ]
         )
         pixelBufferAdaptor = adaptor
         
-        let audioSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVNumberOfChannelsKey: 1,
-            AVSampleRateKey: 44100,
-            AVEncoderBitRateKey: 64000
-        ]
-        
-        let audioInput = AVAssetWriterInput(
-            mediaType: .audio,
-            outputSettings: audioSettings
-        )
-        audioInput.expectsMediaDataInRealTime = true
-        
-        if writer.canAdd(audioInput) {
-            writer.add(audioInput)
-            audioWriterInput = audioInput
+        if AVCaptureDevice.authorizationStatus(for: .audio) == .authorized {
+            let audioSettings: [String: Any] = [
+                AVFormatIDKey: kAudioFormatMPEG4AAC,
+                AVNumberOfChannelsKey: 1,
+                AVSampleRateKey: 44100,
+                AVEncoderBitRateKey: 64000
+            ]
+            
+            let audioInput = AVAssetWriterInput(
+                mediaType: .audio,
+                outputSettings: audioSettings
+            )
+            audioInput.expectsMediaDataInRealTime = true
+            
+            if writer.canAdd(audioInput) {
+                writer.add(audioInput)
+                audioWriterInput = audioInput
+            }
         }
         
         videoWriter = writer
@@ -493,6 +534,7 @@ extension CameraSessionManager: AVCaptureVideoDataOutputSampleBufferDelegate {
 
         if !isVideo,
            videoWritingStarted,
+           AVCaptureDevice.authorizationStatus(for: .audio) == .authorized,
            let input = audioWriterInput,
            input.isReadyForMoreMediaData
         {
@@ -533,8 +575,8 @@ extension CameraSessionManager: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
     
     private func createPixelBuffer(from ciImage: CIImage) -> CVPixelBuffer? {
-        let width = 1280
-        let height = 720
+        let width = 1080
+        let height = 1920
         
         var pixelBuffer: CVPixelBuffer?
         let status = CVPixelBufferCreate(
