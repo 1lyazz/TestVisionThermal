@@ -8,7 +8,6 @@ final class VisionCameraViewModel: ObservableObject {
     @Published var selectedFilter: CameraFilterType = .original
     @Published var isDisableCameraButton: Bool = false
     @Published var isFrontCamera: Bool = false
-    @Published var isRecording: Bool = false
     @Published var recordingTime: TimeInterval = 0
     @Published var isShowAlert = false
     @Published var isShowToast = false
@@ -21,7 +20,13 @@ final class VisionCameraViewModel: ObservableObject {
     @Published var lastContentURL: URL?
     @Published var lastContentName: String?
     @Published var contentThumbnail: UIImage?
-    
+    @Published var isDeinit: Bool = true
+    @Published var isRecording: Bool = false {
+        didSet {
+            coordinator.navigationController.interactivePopGestureRecognizer?.isEnabled = !isRecording
+        }
+    }
+
     var alertTitle: String = ""
     var alertDescription: String = ""
     var toastTitle: String = ""
@@ -36,18 +41,19 @@ final class VisionCameraViewModel: ObservableObject {
     }
     
     deinit {
+        isDeinit = true
         turnOffFlash()
         isCameraVisible = false
     }
     
     func tapOnBackButton() {
+        isDeinit = true
         hapticGen.setUpHaptic()
         turnOffFlash()
         isCameraVisible = false
         coordinator.popView()
         isRecording = false
         stopRecording()
-        cameraSessionManager.stopSessionAndCleanup()
     }
     
     func tapOnCameraButton() {
@@ -55,6 +61,7 @@ final class VisionCameraViewModel: ObservableObject {
         
         switch selectCameraType {
         case .photoCamera:
+            isDeinit = false
             takePhoto()
         case .videoCamera:
             isRecording.toggle()
@@ -91,6 +98,9 @@ final class VisionCameraViewModel: ObservableObject {
     }
     
     func tapOnThumbnail() {
+        isDeinit = false
+        hapticGen.setUpHaptic()
+        
         if selectCameraType == .photoCamera {
             coordinator.pushResultView(
                 photo: contentThumbnail,
@@ -118,6 +128,7 @@ final class VisionCameraViewModel: ObservableObject {
     func tapOnCameraSegmentButton(cameraType: CameraType) {
         hapticGen.setUpHaptic()
         changeCameraStateEffect()
+        isFlashOn = false
         
         guard cameraType == .videoCamera else {
             switchToCameraType(cameraType)
@@ -305,6 +316,7 @@ final class VisionCameraViewModel: ObservableObject {
             
             switch result {
             case .success(let url):
+                self.isDeinit = false
                 let contentName = url.lastPathComponent
                 self.coordinator.pushResultView(video: url, contentName: contentName)
                 self.lastContentURL = url

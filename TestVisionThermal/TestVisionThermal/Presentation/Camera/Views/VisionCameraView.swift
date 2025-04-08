@@ -41,9 +41,14 @@ struct VisionCameraView: View {
         .onAppear {
             viewModel.loadLastSavedContentURL(for: viewModel.selectCameraType)
             viewModel.isDisableCameraButton = false
+            viewModel.isDeinit = true
         }
         .onDisappear {
-            viewModel.cameraSessionManager.stopSessionAndCleanup()
+            viewModel.turnOffFlash()
+            if viewModel.isDeinit {
+                viewModel.isCameraVisible = false
+                viewModel.cameraSessionManager.stopSessionAndCleanup()
+            }
         }
         .alert(viewModel.alertTitle, isPresented: $viewModel.isShowAlert) {
             Button(Strings.okButtonTitle) {
@@ -87,6 +92,9 @@ struct VisionCameraView: View {
                 
                 HStack(spacing: 0) {
                     CircleButton(icon: .backIcon) { viewModel.tapOnBackButton() }
+                        .opacity(viewModel.isRecording ? 0 : 1)
+                        .animation(.default, value: viewModel.isRecording)
+                        .transition(.opacity)
                     
                     Spacer()
                     
