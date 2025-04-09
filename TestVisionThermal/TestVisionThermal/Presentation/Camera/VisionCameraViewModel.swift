@@ -286,6 +286,22 @@ final class VisionCameraViewModel: ObservableObject {
         cameraSessionManager.resumeSession()
     }
     
+    func swipeLeftToNextFilter() {
+        withAnimation {
+            let nextFilter = cameraSessionManager.currentFilter.next()
+            cameraSessionManager.setCurrentFilter(nextFilter)
+            selectedFilter = nextFilter
+        }
+    }
+
+    func swipeRightToPreviousFilter() {
+        withAnimation {
+            let prevFilter = cameraSessionManager.currentFilter.previous()
+            cameraSessionManager.setCurrentFilter(prevFilter)
+            selectedFilter = prevFilter
+        }
+    }
+    
     private func toggleVideoRecording() {
         #if targetEnvironment(simulator)
         if !isRecording {

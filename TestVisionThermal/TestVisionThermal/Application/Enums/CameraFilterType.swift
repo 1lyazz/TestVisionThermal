@@ -82,3 +82,17 @@ extension CameraFilterType {
         return [filter]
     }
 }
+
+extension CameraFilterType {
+    func next() -> CameraFilterType {
+        let all = Self.allCases
+        guard let index = all.firstIndex(of: self) else { return self }
+        return all[(index + 1) % all.count]
+    }
+
+    func previous() -> CameraFilterType {
+        let all = Self.allCases
+        guard let index = all.firstIndex(of: self) else { return self }
+        return all[(index - 1 + all.count) % all.count]
+    }
+}

@@ -12,6 +12,17 @@ struct VisionCameraView: View {
                 CameraView(cameraSessionManager: viewModel.cameraSessionManager, error: $viewModel.cameraError)
                     .blur(radius: viewModel.isChangeCameraState ? 10 : 0)
                     .opacity(viewModel.isCameraVisible ? 1 : 0)
+                    .gesture(
+                        DragGesture()
+                            .onEnded { value in
+                                let horizontalAmount = value.translation.width
+                                if horizontalAmount < -50 {
+                                    viewModel.swipeLeftToNextFilter()
+                                } else if horizontalAmount > 50 {
+                                    viewModel.swipeRightToPreviousFilter()
+                                }
+                            }
+                    )
             }
             
             VStack(spacing: 0) {
@@ -215,22 +226,29 @@ struct VisionCameraView: View {
     }
     
     private var FilterList: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 8) {
-                ForEach(CameraFilterType.allCases, id: \.self) { type in
-                    FilterTypeButton(title: type.title, isSelected: viewModel.selectedFilter == type) {
-                        withAnimation {
-                            viewModel.tapOnFilterButton(filterType: type)
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(CameraFilterType.allCases, id: \.self) { type in
+                        FilterTypeButton(title: type.title, isSelected: viewModel.selectedFilter == type) {
+                            withAnimation {
+                                viewModel.tapOnFilterButton(filterType: type)
+                            }
                         }
+                        .id(type)
                     }
                 }
+                .padding(.horizontal, 16)
             }
-            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+            .onChange(of: viewModel.selectedFilter) { newFilter in
+                withAnimation {
+                    proxy.scrollTo(newFilter, anchor: .center)
+                }
+            }
         }
-        .scrollIndicators(.hidden)
-        .padding(.bottom, 16)
     }
-    
+
     private var cameraButton: some View {
         Button(action: viewModel.tapOnCameraButton) {
             ZStack {
