@@ -17,11 +17,7 @@ struct HomeView: View {
 
                 homePanels
 
-                Spacer()
-
-                Button(action: viewModel.tapOnAllHistoryButton) {
-                    Text("presentHistoryView")
-                }
+                historyListHeader
 
                 Spacer()
             }
@@ -50,5 +46,26 @@ struct HomeView: View {
                 viewModel.selectItem(item: newItem)
             }
         }
+        .padding(.bottom, 38)
+    }
+
+    private var historyListHeader: some View {
+        HStack(spacing: 0) {
+            Text(Strings.historyTitle)
+                .font(Fonts.SFProDisplay.bold.swiftUIFont(size: 22))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+
+            Spacer()
+
+            Button(action: viewModel.tapOnAllHistoryButton) {
+                Text(Strings.viewAllButtonTitle)
+                    .font(Fonts.SFProDisplay.regular.swiftUIFont(size: 15))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .padding(.leading, 2)
+            }
+        }
+        .padding(.bottom, 12)
     }
 }

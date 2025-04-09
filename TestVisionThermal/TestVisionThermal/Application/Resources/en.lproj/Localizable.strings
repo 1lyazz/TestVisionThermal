@@ -12,6 +12,7 @@
 "cancelButtonTitle" = "Cancel";
 "continueButtonTitle" = "Continue";
 "proButtonTitle" = "PRO";
+"viewAllButtonTitle" = "View all";
 
 // MARK: - Alerts
 

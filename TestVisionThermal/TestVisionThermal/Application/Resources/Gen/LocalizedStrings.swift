@@ -66,6 +66,8 @@ internal enum Strings {
   internal static let takePhotoVideoTitle = Strings.tr("Localizable", "takePhotoVideoTitle", fallback: "Take photo or video")
   /// Tap to transform
   internal static let tapOnTransformTitle = Strings.tr("Localizable", "tapOnTransformTitle", fallback: "Tap to transform")
+  /// View all
+  internal static let viewAllButtonTitle = Strings.tr("Localizable", "viewAllButtonTitle", fallback: "View all")
   /// Without Audio
   internal static let withoutAudioTitle = Strings.tr("Localizable", "withoutAudioTitle", fallback: "Without Audio")
   /// Something went wrong :(
