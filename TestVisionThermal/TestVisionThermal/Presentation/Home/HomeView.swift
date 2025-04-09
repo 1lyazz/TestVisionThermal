@@ -13,29 +13,42 @@ struct HomeView: View {
                     viewModel.tapOnProButton()
                 }
                 .padding(.top, 14)
-                
+                .padding(.bottom, 16)
+
+                homePanels
+
                 Spacer()
-
-                Button(action: viewModel.tapOnCameraButton) {
-                    Text("pushCameraView")
-                }
-                .padding(.bottom, 20)
-
-                PhotosPicker(selection: $viewModel.selectedItem, matching: .images) {
-                    Text("pushUploadContentView")
-                }
-                .onChange(of: viewModel.selectedItem) { newItem in
-                    viewModel.selectItem(item: newItem)
-                }
-                .padding(.bottom, 20)
 
                 Button(action: viewModel.tapOnAllHistoryButton) {
                     Text("presentHistoryView")
                 }
-                
+
                 Spacer()
             }
             .padding(.horizontal, 16)
+        }
+    }
+
+    private var homePanels: some View {
+        HStack(spacing: 8) {
+            HomePanel(
+                icon: .cameraIcon,
+                title: Strings.cameraTitle,
+                subTitle: Strings.takePhotoVideoTitle
+            ) {
+                viewModel.tapOnCameraButton()
+            }
+
+            PhotosPicker(selection: $viewModel.selectedItem, matching: .images) {
+                HomePanel(
+                    icon: .photosIcon,
+                    title: Strings.photosTitle,
+                    subTitle: Strings.importFromPhotoTitle
+                )
+            }
+            .onChange(of: viewModel.selectedItem) { newItem in
+                viewModel.selectItem(item: newItem)
+            }
         }
     }
 }

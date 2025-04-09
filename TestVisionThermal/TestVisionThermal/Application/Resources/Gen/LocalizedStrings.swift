@@ -10,6 +10,8 @@ import Foundation
 // swiftlint:disable explicit_type_interface function_parameter_count identifier_name line_length
 // swiftlint:disable nesting type_body_length type_name vertical_whitespace_opening_braces
 internal enum Strings {
+  /// Camera
+  internal static let cameraTitle = Strings.tr("Localizable", "cameraTitle", fallback: "Camera")
   /// Cancel
   internal static let cancelButtonTitle = Strings.tr("Localizable", "cancelButtonTitle", fallback: "Cancel")
   /// Continue
@@ -28,6 +30,8 @@ internal enum Strings {
   internal static let historyTitle = Strings.tr("Localizable", "historyTitle", fallback: "History")
   /// Home
   internal static let homeButtonTitle = Strings.tr("Localizable", "homeButtonTitle", fallback: "Home")
+  /// Import from Photos
+  internal static let importFromPhotoTitle = Strings.tr("Localizable", "importFromPhotoTitle", fallback: "Import from Photos")
   /// To take photos and shoot videos with filters, our app needs permission to access the iPhone Camera.
   internal static let noCameraAccessDescription = Strings.tr("Localizable", "noCameraAccessDescription", fallback: "To take photos and shoot videos with filters, our app needs permission to access the iPhone Camera.")
   /// No Camera Access
@@ -42,6 +46,8 @@ internal enum Strings {
   internal static let noPhotosAccessTitle = Strings.tr("Localizable", "noPhotosAccessTitle", fallback: "No Photos Access")
   /// OK
   internal static let okButtonTitle = Strings.tr("Localizable", "okButtonTitle", fallback: "OK")
+  /// Photos
+  internal static let photosTitle = Strings.tr("Localizable", "photosTitle", fallback: "Photos")
   /// PRO
   internal static let proButtonTitle = Strings.tr("Localizable", "proButtonTitle", fallback: "PRO")
   /// Saved Error
@@ -56,6 +62,8 @@ internal enum Strings {
   internal static let settingsTitle = Strings.tr("Localizable", "settingsTitle", fallback: "Settings")
   /// Share
   internal static let shareButtonTitle = Strings.tr("Localizable", "shareButtonTitle", fallback: "Share")
+  /// Take photo or video
+  internal static let takePhotoVideoTitle = Strings.tr("Localizable", "takePhotoVideoTitle", fallback: "Take photo or video")
   /// Tap to transform
   internal static let tapOnTransformTitle = Strings.tr("Localizable", "tapOnTransformTitle", fallback: "Tap to transform")
   /// Without Audio

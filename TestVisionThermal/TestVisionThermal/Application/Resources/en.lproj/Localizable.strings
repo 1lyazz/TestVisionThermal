@@ -35,3 +35,7 @@
 "tapOnTransformTitle" = "Tap to transform";
 "historyTitle" = "History";
 "settingsTitle" = "Settings";
+"cameraTitle" = "Camera";
+"photosTitle" = "Photos";
+"takePhotoVideoTitle" = "Take photo or video";
+"importFromPhotoTitle" = "Import from Photos";
