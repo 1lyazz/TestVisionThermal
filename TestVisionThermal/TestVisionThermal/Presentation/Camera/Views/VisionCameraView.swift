@@ -149,6 +149,7 @@ struct VisionCameraView: View {
                         .onTapGesture {
                             viewModel.tapOnThumbnail()
                         }
+                        .disabled(viewModel.contentThumbnail == .emptyThumbnail)
                     
                     Spacer()
                     

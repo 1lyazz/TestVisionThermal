@@ -231,12 +231,23 @@ final class VisionCameraViewModel: ObservableObject {
 
         let mediaExtensions = (type == .photoCamera) ? ["jpg", "jpeg", "png"] : ["mov", "mp4"]
 
-        let folderURL = documentsURL
-        
         do {
-            let fileURLs = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: [.contentModificationDateKey], options: .skipsHiddenFiles)
+            let fileURLs = try fileManager.contentsOfDirectory(
+                at: documentsURL,
+                includingPropertiesForKeys: [.contentModificationDateKey],
+                options: .skipsHiddenFiles
+            )
 
             let mediaFiles = fileURLs.filter { mediaExtensions.contains($0.pathExtension.lowercased()) }
+
+            guard !mediaFiles.isEmpty else {
+                DispatchQueue.main.async { [weak self] in
+                    self?.contentThumbnail = .emptyThumbnail
+                    self?.lastContentURL = nil
+                    self?.lastContentName = ""
+                }
+                return
+            }
 
             let sortedFiles = try mediaFiles.sorted {
                 let attr1 = try $0.resourceValues(forKeys: [.contentModificationDateKey])
@@ -254,18 +265,23 @@ final class VisionCameraViewModel: ObservableObject {
                         if let image = UIImage(contentsOfFile: lastFile.path) {
                             self?.contentThumbnail = image
                         } else {
-                            self?.contentThumbnail = nil
+                            self?.contentThumbnail = .emptyThumbnail
                         }
 
                     case .videoCamera:
                         self?.generateThumbnail(for: lastFile) { [weak self] image in
-                            self?.contentThumbnail = image
+                            self?.contentThumbnail = image ?? .emptyThumbnail
                         }
                     }
                 }
             }
         } catch {
-            print("Error loading the contents of a folder \(folderURL): \(error.localizedDescription)")
+            print("Error loading the contents of a folder \(documentsURL): \(error.localizedDescription)")
+            DispatchQueue.main.async { [weak self] in
+                self?.contentThumbnail = .emptyThumbnail
+                self?.lastContentURL = nil
+                self?.lastContentName = ""
+            }
         }
     }
     

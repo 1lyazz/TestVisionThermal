@@ -12,6 +12,8 @@ final class CameraResultViewModel: ObservableObject {
     @Published var videoThumbnail: UIImage?
     @Published var fromThumbnail: Bool = false
     @Published var alertType: AlertType = .ok
+    @Published var mediaItems: [URL] = []
+    @Published var currentIndex: Int = 0
 
     var alertTitle: String = ""
     var alertDescription: String = ""
@@ -28,6 +30,7 @@ final class CameraResultViewModel: ObservableObject {
         self.contentName = contentName
         self.fromThumbnail = fromThumbnail
 
+        loadMediaFiles()
         getThumbnail()
     }
 
@@ -85,13 +88,83 @@ final class CameraResultViewModel: ObservableObject {
     }
 
     func deleteContent() {
-        if let videoURL = videoURL {
-            try? FileManager.default.removeItem(at: videoURL)
-        } else if let photoURL = photoURL {
-            try? FileManager.default.removeItem(at: photoURL)
+        let fileToDelete = mediaItems[currentIndex]
+
+        try? FileManager.default.removeItem(at: fileToDelete)
+        mediaItems.remove(at: currentIndex)
+
+        if mediaItems.isEmpty {
+            coordinator.popView()
+            return
         }
 
-        coordinator.popView()
+        if currentIndex >= mediaItems.count {
+            currentIndex = mediaItems.count - 1
+        }
+
+        loadMedia(at: currentIndex)
+    }
+
+    func showNextMedia() {
+        guard currentIndex < mediaItems.count - 1 else { return }
+        currentIndex += 1
+        loadMedia(at: currentIndex)
+    }
+
+    func showPreviousMedia() {
+        guard currentIndex > 0 else { return }
+        currentIndex -= 1
+        loadMedia(at: currentIndex)
+    }
+
+    private func loadMedia(at index: Int) {
+        guard mediaItems.indices.contains(index) else {
+            print("Invalid index: \(index)")
+            return
+        }
+
+        let url = mediaItems[index]
+        contentName = url.lastPathComponent
+
+        if url.pathExtension.lowercased() == "mov" || url.pathExtension.lowercased() == "mp4" {
+            videoURL = url
+            photo = nil
+            getThumbnail()
+        } else {
+            videoURL = nil
+            if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+                photo = image
+            } else {
+                print("Failed to load image at: \(url)")
+            }
+        }
+    }
+
+    private func loadMediaFiles() {
+        let fileManager = FileManager.default
+        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+
+        do {
+            let files = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil)
+            let sorted = files.sorted {
+                let attrs1 = try? FileManager.default.attributesOfItem(atPath: $0.path)
+                let attrs2 = try? FileManager.default.attributesOfItem(atPath: $1.path)
+
+                let date1 = attrs1?[.creationDate] as? Date ?? .distantPast
+                let date2 = attrs2?[.creationDate] as? Date ?? .distantPast
+
+                return date1 > date2
+            }
+
+            mediaItems = sorted
+            if let current = videoURL ?? photoURL,
+               let index = sorted.firstIndex(of: current)
+            {
+                currentIndex = index
+            }
+        } catch {
+            print("Failed to load media files: \(error)")
+        }
     }
 
     private func getThumbnail() {

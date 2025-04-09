@@ -102,31 +102,49 @@ struct CameraResultView: View {
     }
     
     private var mediaContent: some View {
-        Group {
-            if let photo = viewModel.photo {
-                Image(uiImage: photo)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 351, height: 543)
-                    .clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-            } else if let videoURL = viewModel.videoURL {
-                VideoPlayerView(videoURL: videoURL, autoPlay: true)
-                    .frame(width: 351, height: 543)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                    .onDisappear {
-                        AVPlayer(url: videoURL).pause()
-                    }
+        ZStack {
+            Group {
+                if let photo = viewModel.photo {
+                    Image(uiImage: photo)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 351, height: 543)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                } else if let videoURL = viewModel.videoURL {
+                    VideoPlayerView(videoURL: videoURL, autoPlay: true)
+                        .frame(width: 351, height: 543)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .onDisappear {
+                            AVPlayer(url: videoURL).pause()
+                        }
+                }
             }
+            .gesture(
+                DragGesture()
+                    .onEnded { value in
+                        if value.translation.width < -50 {
+                            withAnimation {
+                                viewModel.showPreviousMedia()
+                            }
+                        } else if value.translation.width > 50 {
+                            withAnimation {
+                                viewModel.showNextMedia()
+                            }
+                        }
+                    }
+            )
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .foregroundStyle(.gray2D2D2D)
+            )
+            .padding(.horizontal, 12)
+            .padding(.top, 4)
+
+            swipeView
         }
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .foregroundStyle(.gray2D2D2D)
-        )
-        .padding(.horizontal, 12)
-        .padding(.top, 4)
     }
-    
+
     private var mainButton: some View {
         ZStack {
             if viewModel.fromThumbnail == false {
@@ -200,6 +218,16 @@ struct CameraResultView: View {
                         .foregroundStyle(.white)
                 }
             }
+        }
+    }
+    
+    private var swipeView: some View {
+        HStack {
+            Rectangle()
+                .frame(width: 45)
+                .foregroundStyle(.white.opacity(0.000001))
+            
+            Spacer()
         }
     }
 }
