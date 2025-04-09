@@ -65,6 +65,19 @@ struct UploadContentView: View {
                 )
                 .padding(.horizontal, 16)
                 .padding(.top, 4)
+                .gesture(
+                    DragGesture()
+                        .onEnded { value in
+                            let horizontalAmount = value.translation.width
+                            if horizontalAmount < -50 {
+                                viewModel.swipeLeftToNextFilter()
+                            } else if horizontalAmount > 50 {
+                                viewModel.swipeRightToPreviousFilter()
+                            }
+                        }
+                )
+            
+            swipeView
         }
     }
     
@@ -99,5 +112,15 @@ struct UploadContentView: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 10)
+    }
+    
+    private var swipeView: some View {
+        HStack {
+            Rectangle()
+                .frame(width: 50)
+                .foregroundStyle(.white.opacity(0.000001))
+            
+            Spacer()
+        }
     }
 }

@@ -115,6 +115,7 @@ struct CameraResultView: View {
                     VideoPlayerView(videoURL: videoURL, autoPlay: true)
                         .frame(width: 351, height: 543)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .id(videoURL)
                         .onDisappear {
                             AVPlayer(url: videoURL).pause()
                         }

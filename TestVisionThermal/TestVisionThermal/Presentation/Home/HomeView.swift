@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 
 struct HomeView: View {
@@ -12,8 +13,11 @@ struct HomeView: View {
                     Text("pushCameraView")
                 }
 
-                Button(action: viewModel.tapOnPhotosButton) {
+                PhotosPicker(selection: $viewModel.selectedItem, matching: .images) {
                     Text("pushUploadContentView")
+                }
+                .onChange(of: viewModel.selectedItem) { newItem in
+                    viewModel.selectItem(item: newItem)
                 }
 
                 Button(action: viewModel.tapOnAllHistoryButton) {
