@@ -24,6 +24,8 @@ internal enum Strings {
   internal static let goSettingsButtonTitle = Strings.tr("Localizable", "goSettingsButtonTitle", fallback: "Go to settings")
   /// History
   internal static let historyButtonTitle = Strings.tr("Localizable", "historyButtonTitle", fallback: "History")
+  /// History
+  internal static let historyTitle = Strings.tr("Localizable", "historyTitle", fallback: "History")
   /// Home
   internal static let homeButtonTitle = Strings.tr("Localizable", "homeButtonTitle", fallback: "Home")
   /// To take photos and shoot videos with filters, our app needs permission to access the iPhone Camera.
@@ -40,6 +42,8 @@ internal enum Strings {
   internal static let noPhotosAccessTitle = Strings.tr("Localizable", "noPhotosAccessTitle", fallback: "No Photos Access")
   /// OK
   internal static let okButtonTitle = Strings.tr("Localizable", "okButtonTitle", fallback: "OK")
+  /// PRO
+  internal static let proButtonTitle = Strings.tr("Localizable", "proButtonTitle", fallback: "PRO")
   /// Saved Error
   internal static let savedErrorTitle = Strings.tr("Localizable", "savedErrorTitle", fallback: "Saved Error")
   /// Saved to Photos
@@ -48,8 +52,12 @@ internal enum Strings {
   internal static let saveToPhotosButtonTitle = Strings.tr("Localizable", "saveToPhotosButtonTitle", fallback: "Save to Photos")
   /// Settings
   internal static let settingsButtonTitle = Strings.tr("Localizable", "settingsButtonTitle", fallback: "Settings")
+  /// Settings
+  internal static let settingsTitle = Strings.tr("Localizable", "settingsTitle", fallback: "Settings")
   /// Share
   internal static let shareButtonTitle = Strings.tr("Localizable", "shareButtonTitle", fallback: "Share")
+  /// Tap to transform
+  internal static let tapOnTransformTitle = Strings.tr("Localizable", "tapOnTransformTitle", fallback: "Tap to transform")
   /// Without Audio
   internal static let withoutAudioTitle = Strings.tr("Localizable", "withoutAudioTitle", fallback: "Without Audio")
   /// Something went wrong :(

@@ -18,7 +18,11 @@ final class HomeViewModel: ObservableObject {
 
     func tapOnAllHistoryButton() {
         hapticGen.setUpHaptic()
-        coordinator.presentHistoryView()
+        coordinator.presentHistoryView(isSheetPresentation: true)
+    }
+
+    func tapOnProButton() {
+        hapticGen.setUpHaptic()
     }
 
     func selectItem(item: PhotosPickerItem?) {

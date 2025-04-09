@@ -1,9 +1,22 @@
 import SwiftUI
 
 final class HistoryViewModel: ObservableObject {
-    var coordinator: Coordinator
+    @Published var isSheetPresentation: Bool = false
 
-    init(coordinator: Coordinator) {
+    private let coordinator: Coordinator
+    private let hapticGen = HapticGen.shared
+
+    init(coordinator: Coordinator, isSheetPresentation: Bool = false) {
         self.coordinator = coordinator
+        self.isSheetPresentation = isSheetPresentation
+    }
+
+    func tapOnProButton() {
+        hapticGen.setUpHaptic()
+    }
+    
+    func tapOnCloseButton() {
+        hapticGen.setUpHaptic()
+        coordinator.dismissView()
     }
 }

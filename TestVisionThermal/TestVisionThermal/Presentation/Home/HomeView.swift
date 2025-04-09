@@ -8,10 +8,18 @@ struct HomeView: View {
         ZStack {
             Color.black090909.ignoresSafeArea()
 
-            VStack(spacing: 24) {
+            VStack(spacing: 0) {
+                MainHeader(title: UIApplication.shared.appName, subTitle: Strings.tapOnTransformTitle) {
+                    viewModel.tapOnProButton()
+                }
+                .padding(.top, 14)
+                
+                Spacer()
+
                 Button(action: viewModel.tapOnCameraButton) {
                     Text("pushCameraView")
                 }
+                .padding(.bottom, 20)
 
                 PhotosPicker(selection: $viewModel.selectedItem, matching: .images) {
                     Text("pushUploadContentView")
@@ -19,11 +27,15 @@ struct HomeView: View {
                 .onChange(of: viewModel.selectedItem) { newItem in
                     viewModel.selectItem(item: newItem)
                 }
+                .padding(.bottom, 20)
 
                 Button(action: viewModel.tapOnAllHistoryButton) {
                     Text("presentHistoryView")
                 }
+                
+                Spacer()
             }
+            .padding(.horizontal, 16)
         }
     }
 }

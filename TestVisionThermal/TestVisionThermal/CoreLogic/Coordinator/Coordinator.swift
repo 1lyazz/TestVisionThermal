@@ -68,8 +68,8 @@ final class Coordinator: CoordinatorProtocol {
         pushHostingController(rootView: UploadContentView(viewModel: viewModel))
     }
     
-    func presentHistoryView() {
-        let historyView = HistoryView(viewModel: .init(coordinator: self))
+    func presentHistoryView(isSheetPresentation: Bool = false) {
+        let historyView = HistoryView(viewModel: .init(coordinator: self, isSheetPresentation: isSheetPresentation))
         let hostingController = UIHostingController(rootView: historyView)
         hostingController.sheetPresentationController?.preferredCornerRadius = 28
         

@@ -11,6 +11,7 @@
 "deleteButtonTitle" = "Delete";
 "cancelButtonTitle" = "Cancel";
 "continueButtonTitle" = "Continue";
+"proButtonTitle" = "PRO";
 
 // MARK: - Alerts
 
@@ -28,3 +29,9 @@
 "noCameraAccessDescription" = "To take photos and shoot videos with filters, our app needs permission to access the iPhone Camera.";
 "wrongAccessDescription" = "Something went wrong :(";
 "deleteAlertDescription" = "This action cannot be reversed";
+
+// MARK: - General
+
+"tapOnTransformTitle" = "Tap to transform";
+"historyTitle" = "History";
+"settingsTitle" = "Settings";
