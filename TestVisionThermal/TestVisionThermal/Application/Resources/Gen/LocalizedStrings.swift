@@ -42,10 +42,10 @@ internal enum Strings {
   internal static let okButtonTitle = Strings.tr("Localizable", "okButtonTitle", fallback: "OK")
   /// Saved Error
   internal static let savedErrorTitle = Strings.tr("Localizable", "savedErrorTitle", fallback: "Saved Error")
-  /// Saved to Gallery
-  internal static let savedToGalleryTitle = Strings.tr("Localizable", "savedToGalleryTitle", fallback: "Saved to Gallery")
-  /// Save to Gallery
-  internal static let saveToGalleryButtonTitle = Strings.tr("Localizable", "saveToGalleryButtonTitle", fallback: "Save to Gallery")
+  /// Saved to Photos
+  internal static let savedToPhotosTitle = Strings.tr("Localizable", "savedToPhotosTitle", fallback: "Saved to Photos")
+  /// Save to Photos
+  internal static let saveToPhotosButtonTitle = Strings.tr("Localizable", "saveToPhotosButtonTitle", fallback: "Save to Photos")
   /// Settings
   internal static let settingsButtonTitle = Strings.tr("Localizable", "settingsButtonTitle", fallback: "Settings")
   /// Share

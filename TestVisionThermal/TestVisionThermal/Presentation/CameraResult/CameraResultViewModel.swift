@@ -50,7 +50,7 @@ final class CameraResultViewModel: ObservableObject {
                 case .authorized:
                     if let photo = photo {
                         self.savePhotoToLibrary(photo: photo)
-                        toastTitle = Strings.savedToGalleryTitle
+                        toastTitle = Strings.savedToPhotosTitle
                         isShowToast = true
                     } else if let videoURL = videoURL {
                         saveVideoToLibrary(videoURL)
@@ -64,7 +64,7 @@ final class CameraResultViewModel: ObservableObject {
                 case .limited:
                     if let photo = photo {
                         self.savePhotoToLibrary(photo: photo)
-                        toastTitle = Strings.savedToGalleryTitle
+                        toastTitle = Strings.savedToPhotosTitle
                         isShowToast = true
                     } else if let videoURL = videoURL {
                         saveVideoToLibrary(videoURL)
@@ -210,7 +210,7 @@ final class CameraResultViewModel: ObservableObject {
         }) { [weak self] success, _ in
             DispatchQueue.main.async {
                 if success {
-                    self?.toastTitle = Strings.savedToGalleryTitle
+                    self?.toastTitle = Strings.savedToPhotosTitle
                     self?.isShowToast = true
                 } else {
                     self?.toastTitle = Strings.savedErrorTitle

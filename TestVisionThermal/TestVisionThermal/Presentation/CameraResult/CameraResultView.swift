@@ -148,7 +148,7 @@ struct CameraResultView: View {
     private var mainButton: some View {
         ZStack {
             if viewModel.fromThumbnail == false {
-                MainButton(title: Strings.saveToGalleryButtonTitle, icon: .saveIcon) {
+                MainButton(title: Strings.saveToPhotosButtonTitle, icon: .saveIcon) {
                     viewModel.tapOnSaveButton()
                 }
             } else {

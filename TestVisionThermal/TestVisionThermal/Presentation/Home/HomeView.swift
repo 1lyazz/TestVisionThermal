@@ -8,15 +8,15 @@ struct HomeView: View {
             Color.black090909.ignoresSafeArea()
 
             VStack(spacing: 24) {
-                Button(action: viewModel.coordinator.pushCameraView) {
+                Button(action: viewModel.tapOnCameraButton) {
                     Text("pushCameraView")
                 }
 
-                Button(action: { viewModel.coordinator.pushUploadContentView(contentName: "Image-123321", photo: .simulatorPhoto) }) {
+                Button(action: viewModel.tapOnPhotosButton) {
                     Text("pushUploadContentView")
                 }
 
-                Button(action: viewModel.coordinator.presentHistoryView) {
+                Button(action: viewModel.tapOnAllHistoryButton) {
                     Text("presentHistoryView")
                 }
             }

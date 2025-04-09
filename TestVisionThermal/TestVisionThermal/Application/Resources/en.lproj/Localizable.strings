@@ -3,7 +3,7 @@
 "homeButtonTitle" = "Home";
 "historyButtonTitle" = "History";
 "settingsButtonTitle" = "Settings";
-"saveToGalleryButtonTitle" = "Save to Gallery";
+"saveToPhotosButtonTitle" = "Save to Photos";
 "okButtonTitle" = "OK";
 "settingsButtonTitle" = "Settings";
 "goSettingsButtonTitle" = "Go to settings";
@@ -14,7 +14,7 @@
 
 // MARK: - Alerts
 
-"savedToGalleryTitle" = "Saved to Gallery";
+"savedToPhotosTitle" = "Saved to Photos";
 "savedErrorTitle" = "Saved Error";
 "withoutAudioTitle" = "Without Audio";
 "noPhotosAccessTitle" = "No Photos Access";
