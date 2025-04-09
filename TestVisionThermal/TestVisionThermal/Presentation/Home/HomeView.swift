@@ -7,9 +7,13 @@ struct HomeView: View {
         ZStack {
             Color.black090909.ignoresSafeArea()
 
-            VStack {
+            VStack(spacing: 24) {
                 Button(action: viewModel.coordinator.pushCameraView) {
                     Text("pushCameraView")
+                }
+
+                Button(action: { viewModel.coordinator.pushUploadContentView(contentName: "Image-123321", photo: .simulatorPhoto) }) {
+                    Text("pushUploadContentView")
                 }
 
                 Button(action: viewModel.coordinator.presentHistoryView) {

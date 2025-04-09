@@ -10,6 +10,7 @@
 "shareButtonTitle" = "Share";
 "deleteButtonTitle" = "Delete";
 "cancelButtonTitle" = "Cancel";
+"continueButtonTitle" = "Continue";
 
 // MARK: - Alerts
 

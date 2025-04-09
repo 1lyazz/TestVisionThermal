@@ -58,6 +58,16 @@ final class Coordinator: CoordinatorProtocol {
         pushHostingController(rootView: CameraResultView(viewModel: viewModel))
     }
     
+    func pushUploadContentView(contentName: String, photo: UIImage, photoURL: URL? = nil) {
+        let viewModel = UploadContentViewModel(
+            coordinator: self,
+            contentName: contentName,
+            photo: photo,
+            photoURL: photoURL
+        )
+        pushHostingController(rootView: UploadContentView(viewModel: viewModel))
+    }
+    
     func presentHistoryView() {
         let historyView = HistoryView(viewModel: .init(coordinator: self))
         let hostingController = UIHostingController(rootView: historyView)

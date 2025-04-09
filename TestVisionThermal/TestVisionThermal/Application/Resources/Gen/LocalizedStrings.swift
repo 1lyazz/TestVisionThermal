@@ -12,6 +12,8 @@ import Foundation
 internal enum Strings {
   /// Cancel
   internal static let cancelButtonTitle = Strings.tr("Localizable", "cancelButtonTitle", fallback: "Cancel")
+  /// Continue
+  internal static let continueButtonTitle = Strings.tr("Localizable", "continueButtonTitle", fallback: "Continue")
   /// This action cannot be reversed
   internal static let deleteAlertDescription = Strings.tr("Localizable", "deleteAlertDescription", fallback: "This action cannot be reversed")
   /// Do you really want to delete?
