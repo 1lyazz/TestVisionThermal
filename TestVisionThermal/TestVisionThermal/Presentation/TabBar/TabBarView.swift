@@ -66,6 +66,10 @@ struct TabBarView: View {
                 )
 
             RoundedRectangle(cornerRadius: 40)
+                .foregroundStyle(.black090909.opacity(0.9))
+                .blur(radius: 4)
+
+            RoundedRectangle(cornerRadius: 40)
                 .foregroundStyle(.clear)
                 .overlay(alignment: .center) {
                     RoundedRectangle(cornerRadius: 40)

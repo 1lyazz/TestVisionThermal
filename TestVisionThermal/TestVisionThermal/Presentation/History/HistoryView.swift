@@ -135,6 +135,7 @@ struct HistoryView: View {
                     }
                 }
                 .padding(.top, 12)
+                .padding(.bottom, 100)
                 .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.filteredMediaItems)
             }
             .padding(.horizontal, 16)

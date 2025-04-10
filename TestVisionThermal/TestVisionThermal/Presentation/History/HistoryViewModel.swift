@@ -92,6 +92,11 @@ extension HistoryViewModel {
 
     func tapOnEdit(_ item: MediaItem) {
         hapticGen.setUpHaptic()
+
+        if isSheetPresentation {
+            coordinator.dismissView()
+        }
+
         coordinator.pushUploadContentView(contentName: item.name, photo: item.thumbnail, photoURL: item.url, isEdit: true)
     }
 }
