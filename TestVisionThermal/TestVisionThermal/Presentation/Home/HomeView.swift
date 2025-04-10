@@ -7,38 +7,14 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            Color.black090909.ignoresSafeArea()
+            Color.black090909
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                VStack(spacing: 0) {
-                    MainHeader(title: UIApplication.shared.appName, subTitle: Strings.tapOnTransformTitle) {
-                        viewModel.tapOnProButton()
-                    }
-                    .padding(.top, 14)
-                    .padding(.bottom, 16)
+                headerSection
+                    .padding(.horizontal, 16)
 
-                    homePanels
-
-                    historyListHeader
-                }
-                .padding(.horizontal, 16)
-
-                if viewModel.isLoading {
-                    AlertToast(
-                        displayMode: .alert,
-                        type: .loading,
-                        style: .style(
-                            backgroundColor: .clear
-                        )
-                    )
-                    .frame(height: 231)
-                } else {
-                    if !viewModel.mediaItems.isEmpty {
-                        historyList
-                    } else {
-                        EmptyView
-                    }
-                }
+                contentSection
 
                 Spacer()
             }
@@ -46,6 +22,28 @@ struct HomeView: View {
         .onAppear {
             viewModel.isLoading = true
             viewModel.loadMediaFiles()
+        }
+    }
+}
+
+// MARK: - Header Section
+
+extension HomeView {
+    private var headerSection: some View {
+        VStack(spacing: 0) {
+            MainHeader(
+                title: UIApplication.shared.appName,
+                subTitle: Strings.tapOnTransformTitle
+            ) {
+                viewModel.tapOnProButton()
+            }
+            .padding(.top, 14)
+            .padding(.bottom, 16)
+
+            homePanels
+
+            historyListHeader
+                .padding(.bottom, 17)
         }
     }
 
@@ -90,7 +88,29 @@ struct HomeView: View {
                     .padding(.leading, 2)
             }
         }
-        .padding(.bottom, 17)
+    }
+}
+
+// MARK: - Content Section
+
+extension HomeView {
+    private var contentSection: some View {
+        Group {
+            if viewModel.isLoading {
+                AlertToast(
+                    displayMode: .alert,
+                    type: .loading,
+                    style: .style(backgroundColor: .clear)
+                )
+                .frame(height: 231)
+            } else {
+                if !viewModel.mediaItems.isEmpty {
+                    historyList
+                } else {
+                    emptyView
+                }
+            }
+        }
     }
 
     private var historyList: some View {
@@ -116,7 +136,7 @@ struct HomeView: View {
         .scrollIndicators(.hidden)
     }
 
-    private var EmptyView: some View {
+    private var emptyView: some View {
         VStack(spacing: 4) {
             Image(.folderIcon)
                 .resizable()
