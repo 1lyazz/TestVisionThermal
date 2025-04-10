@@ -108,6 +108,8 @@ extension HomeView {
                     historyList
                 } else {
                     emptyView
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                        .transition(.opacity)
                 }
             }
         }
@@ -135,6 +137,7 @@ extension HomeView {
             .padding(.leading, 16)
         }
         .scrollIndicators(.hidden)
+        .transition(.move(edge: .trailing).combined(with: .opacity))
     }
 
     private var emptyView: some View {
@@ -154,7 +157,9 @@ extension HomeView {
                 .foregroundStyle(.gray9A9A9A)
                 .lineLimit(1)
                 .multilineTextAlignment(.center)
+                .padding(.top, 2)
         }
         .frame(height: 231)
+        .padding(.horizontal, 40)
     }
 }

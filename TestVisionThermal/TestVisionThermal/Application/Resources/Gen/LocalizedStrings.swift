@@ -10,6 +10,8 @@ import Foundation
 // swiftlint:disable explicit_type_interface function_parameter_count identifier_name line_length
 // swiftlint:disable nesting type_body_length type_name vertical_whitespace_opening_braces
 internal enum Strings {
+  /// All
+  internal static let allTitle = Strings.tr("Localizable", "allTitle", fallback: "All")
   /// Camera
   internal static let cameraTitle = Strings.tr("Localizable", "cameraTitle", fallback: "Camera")
   /// Cancel
@@ -24,6 +26,8 @@ internal enum Strings {
   internal static let deleteButtonTitle = Strings.tr("Localizable", "deleteButtonTitle", fallback: "Delete")
   /// Edit
   internal static let editButtonTitle = Strings.tr("Localizable", "editButtonTitle", fallback: "Edit")
+  /// Go to Camera
+  internal static let goCameraButtonTitle = Strings.tr("Localizable", "goCameraButtonTitle", fallback: "Go to Camera")
   /// Go to settings
   internal static let goSettingsButtonTitle = Strings.tr("Localizable", "goSettingsButtonTitle", fallback: "Go to settings")
   /// History

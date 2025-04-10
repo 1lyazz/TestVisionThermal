@@ -14,6 +14,7 @@
 "proButtonTitle" = "PRO";
 "viewAllButtonTitle" = "View all";
 "editButtonTitle" = "Edit";
+"goCameraButtonTitle" = "Go to Camera";
 
 // MARK: - Alerts
 
@@ -43,3 +44,4 @@
 "importFromPhotoTitle" = "Import from Photos";
 "noPhotosTitle" = "No Photos Yet";
 "historyWillAppearTitle" = "Your history will appear here";
+"allTitle" = "All";
