@@ -7,6 +7,7 @@ struct HistoryCell: View {
     var width: CGFloat?
     let cellAction: () -> Void
     let deleteAction: () -> Void
+    let editAction: () -> Void
 
     var body: some View {
         ZStack(alignment: .trailing) {
@@ -18,7 +19,7 @@ struct HistoryCell: View {
                         .frame(width: 40, height: 48)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     
-                    Text(contentName)
+                    Text(contentName.prefix(14))
                         .font(Fonts.SFProDisplay.regular.swiftUIFont(size: 15))
                         .foregroundStyle(.white)
                     
@@ -34,9 +35,17 @@ struct HistoryCell: View {
             }
             
             Menu {
+                if !contentName.localizedCaseInsensitiveContains("video") ||
+                    contentURL.pathExtension.lowercased() != "mov"
+                {
+                    Button { editAction() } label: {
+                        Label(Strings.editButtonTitle, systemImage: "pencil")
+                    }
+                }
+                
                 ShareLink(
                     item: contentURL,
-                    preview: SharePreview(contentName, image: Image(uiImage: contentThumbnail))
+                    preview: SharePreview(contentName.prefix(14), image: Image(uiImage: contentThumbnail))
                 ) {
                     Label(Strings.shareButtonTitle, systemImage: "square.and.arrow.up")
                 }

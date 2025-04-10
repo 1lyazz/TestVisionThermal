@@ -21,6 +21,14 @@ struct CameraResultView: View {
             }
         }
         .edgesIgnoringSafeArea(.top)
+        .simultaneousGesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.height > 100, abs(value.translation.width) < 50 {
+                        viewModel.tapOnBackButton()
+                    }
+                }
+        )
         .alert(isPresented: $viewModel.isShowAlert) {
             switch viewModel.alertType {
             case .ok:
@@ -90,8 +98,10 @@ struct CameraResultView: View {
                     
                 if viewModel.fromThumbnail == false {
                     shareButton
-                } else {
+                } else if viewModel.videoURL != nil {
                     CircleButton(icon: .binIcon) { viewModel.tapOnDeleteButton() }
+                } else {
+                    actionMenu
                 }
             }
             .padding(.horizontal, 16)
@@ -122,9 +132,13 @@ struct CameraResultView: View {
                         }
                 }
             }
-            .gesture(
+            .simultaneousGesture(
                 DragGesture()
+                    .onChanged { value in
+                        guard value.startLocation.x > 40 else { return }
+                    }
                     .onEnded { value in
+                        guard value.startLocation.x > 40 else { return }
                         if value.translation.width < -50 {
                             withAnimation {
                                 viewModel.showPreviousMedia()
@@ -142,8 +156,6 @@ struct CameraResultView: View {
             )
             .padding(.horizontal, 12)
             .padding(.top, 4)
-
-            swipeView
         }
     }
 
@@ -223,13 +235,31 @@ struct CameraResultView: View {
         }
     }
     
-    private var swipeView: some View {
-        HStack {
-            Rectangle()
-                .frame(width: 45)
-                .foregroundStyle(.white.opacity(0.000001))
+    private var actionMenu: some View {
+        Menu {
+            Button {
+                viewModel.tapOnEdit(
+                    contentName: viewModel.contentName,
+                    photo: viewModel.photo ?? .emptyThumbnail,
+                    photoURL: viewModel.photoURL
+                )
+            } label: {
+                Label(Strings.editButtonTitle, systemImage: "pencil")
+            }
             
-            Spacer()
+            Button(role: .destructive) { viewModel.tapOnDeleteButton() } label: {
+                Label(Strings.deleteButtonTitle, systemImage: "trash")
+            }
+        } label: {
+            Circle()
+                .stroke(.tertiary99889C, lineWidth: 1)
+                .background(Circle().fill(.clear))
+                .frame(width: 40, height: 40)
+                .overlay {
+                    Image(.ellipsisIcon)
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                }
         }
     }
 }

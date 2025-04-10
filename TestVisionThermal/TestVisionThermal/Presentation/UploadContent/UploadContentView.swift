@@ -21,6 +21,14 @@ struct UploadContentView: View {
             }
         }
         .edgesIgnoringSafeArea(.top)
+        .simultaneousGesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.height > 100, abs(value.translation.width) < 50 {
+                        viewModel.tapOnBackButton()
+                    }
+                }
+        )
     }
     
     private var navigationBar: some View {
@@ -66,7 +74,7 @@ struct UploadContentView: View {
                 )
                 .padding(.horizontal, 16)
                 .padding(.top, 4)
-                .gesture(
+                .simultaneousGesture(
                     DragGesture()
                         .onEnded { value in
                             let horizontalAmount = value.translation.width
@@ -77,8 +85,6 @@ struct UploadContentView: View {
                             }
                         }
                 )
-            
-            swipeView
         }
     }
     
@@ -113,15 +119,5 @@ struct UploadContentView: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 10)
-    }
-    
-    private var swipeView: some View {
-        HStack {
-            Rectangle()
-                .frame(width: 50)
-                .foregroundStyle(.white.opacity(0.000001))
-            
-            Spacer()
-        }
     }
 }

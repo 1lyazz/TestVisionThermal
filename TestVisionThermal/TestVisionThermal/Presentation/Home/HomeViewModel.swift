@@ -44,7 +44,8 @@ extension HomeViewModel {
         if fileExtension == "mov" || fileExtension == "mp4" {
             coordinator.pushResultView(
                 video: media.url,
-                contentName: media.name
+                contentName: media.name,
+                fromThumbnail: true
             )
         } else {
             coordinator.pushResultView(
@@ -62,6 +63,11 @@ extension HomeViewModel {
         withAnimation(.default) {
             loadMediaFiles()
         }
+    }
+
+    func tapOnEdit(_ item: MediaItem) {
+        hapticGen.setUpHaptic()
+        coordinator.pushUploadContentView(contentName: item.name, photo: item.thumbnail, photoURL: item.url, isEdit: true)
     }
 }
 
@@ -105,10 +111,18 @@ extension HomeViewModel {
 
         Task.detached(priority: .background) {
             do {
-                let files = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil)
+                let files = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: [.isDirectoryKey], options: [])
+                let filteredFiles = files.filter { url in
+                    if let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey]),
+                       let isDirectory = resourceValues.isDirectory
+                    {
+                        return !isDirectory
+                    }
+                    return true
+                }
 
                 let mediaItems: [MediaItem] = try await withThrowingTaskGroup(of: MediaItem?.self) { group in
-                    for url in files {
+                    for url in filteredFiles {
                         group.addTask {
                             let attrs = try? fileManager.attributesOfItem(atPath: url.path)
                             let creationDate = attrs?[.creationDate] as? Date ?? Date.distantPast
@@ -117,19 +131,19 @@ extension HomeViewModel {
                                 let thumbnail = await self.generateThumbnail(for: url) ?? UIImage.emptyThumbnail
                                 return MediaItem(url: url,
                                                  thumbnail: thumbnail,
-                                                 name: String(url.lastPathComponent.prefix(14)),
+                                                 name: String(url.lastPathComponent),
                                                  creationDate: creationDate)
                             } else if let data = try? Data(contentsOf: url),
                                       let image = UIImage(data: data)
                             {
                                 return MediaItem(url: url,
                                                  thumbnail: image,
-                                                 name: String(url.lastPathComponent.prefix(14)),
+                                                 name: String(url.lastPathComponent),
                                                  creationDate: creationDate)
                             } else {
                                 return MediaItem(url: url,
                                                  thumbnail: UIImage.emptyThumbnail,
-                                                 name: String(url.lastPathComponent.prefix(14)),
+                                                 name: String(url.lastPathComponent),
                                                  creationDate: creationDate)
                             }
                         }

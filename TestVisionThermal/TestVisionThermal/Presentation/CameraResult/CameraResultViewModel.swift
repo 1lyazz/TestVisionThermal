@@ -11,6 +11,7 @@ final class CameraResultViewModel: ObservableObject {
     @Published var isOnSettingsButton = true
     @Published var videoThumbnail: UIImage?
     @Published var fromThumbnail: Bool = false
+    @Published var fromUpload: Bool = false
     @Published var alertType: AlertType = .ok
     @Published var mediaItems: [URL] = []
     @Published var currentIndex: Int = 0
@@ -22,21 +23,40 @@ final class CameraResultViewModel: ObservableObject {
     private let coordinator: Coordinator
     private let hapticGen = HapticGen.shared
 
-    init(coordinator: Coordinator, photo: UIImage? = nil, videoURL: URL? = nil, photoURL: URL? = nil, contentName: String, fromThumbnail: Bool) {
+    init(
+        coordinator: Coordinator,
+        photo: UIImage? = nil,
+        videoURL: URL? = nil,
+        photoURL: URL? = nil,
+        contentName: String,
+        fromThumbnail: Bool,
+        fromUpload: Bool
+    ) {
         self.coordinator = coordinator
         self.photo = photo
         self.videoURL = videoURL
         self.photoURL = photoURL
         self.contentName = contentName
         self.fromThumbnail = fromThumbnail
+        self.fromUpload = fromUpload
 
         loadMediaFiles()
         getThumbnail()
     }
 
+    deinit {
+        if fromUpload {
+            coordinator.popToRootView()
+        }
+    }
+
     func tapOnBackButton() {
         hapticGen.setUpHaptic()
-        coordinator.popView()
+        if !fromUpload {
+            coordinator.popView()
+        } else {
+            coordinator.popToRootView()
+        }
     }
 
     func tapOnSaveButton() {
@@ -102,7 +122,14 @@ final class CameraResultViewModel: ObservableObject {
             currentIndex = mediaItems.count - 1
         }
 
-        loadMedia(at: currentIndex)
+        withAnimation(.default) {
+            loadMedia(at: currentIndex)
+        }
+    }
+
+    func tapOnEdit(contentName: String, photo: UIImage, photoURL: URL?) {
+        hapticGen.setUpHaptic()
+        coordinator.pushUploadContentView(contentName: contentName, photo: photo, photoURL: photoURL, isEdit: true)
     }
 
     func showNextMedia() {
@@ -125,17 +152,18 @@ final class CameraResultViewModel: ObservableObject {
 
         let url = mediaItems[index]
         contentName = url.lastPathComponent
-
-        if url.pathExtension.lowercased() == "mov" || url.pathExtension.lowercased() == "mp4" {
-            videoURL = url
-            photo = nil
-            getThumbnail()
-        } else {
-            videoURL = nil
-            if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
-                photo = image
+        withAnimation(.default) {
+            if url.pathExtension.lowercased() == "mov" || url.pathExtension.lowercased() == "mp4" {
+                videoURL = url
+                photo = nil
+                getThumbnail()
             } else {
-                print("Failed to load image at: \(url)")
+                videoURL = nil
+                if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+                    photo = image
+                } else {
+                    print("Failed to load image at: \(url)")
+                }
             }
         }
     }
@@ -145,8 +173,18 @@ final class CameraResultViewModel: ObservableObject {
         let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
 
         do {
-            let files = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil)
-            let sorted = files.sorted {
+            let files = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: [.isDirectoryKey], options: [])
+
+            let filteredFiles = files.filter { url in
+                if let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey]),
+                   let isDirectory = resourceValues.isDirectory
+                {
+                    return !isDirectory
+                }
+                return true
+            }
+
+            let sorted = filteredFiles.sorted {
                 let attrs1 = try? FileManager.default.attributesOfItem(atPath: $0.path)
                 let attrs2 = try? FileManager.default.attributesOfItem(atPath: $1.path)
 

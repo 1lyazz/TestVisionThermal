@@ -46,24 +46,38 @@ final class Coordinator: CoordinatorProtocol {
         pushHostingController(rootView: VisionCameraView(viewModel: .init(coordinator: self)))
     }
     
-    func pushResultView(photo: UIImage? = nil, video: URL? = nil, photoURL: URL? = nil, contentName: String, fromThumbnail: Bool = false) {
+    func pushResultView(
+        photo: UIImage? = nil,
+        video: URL? = nil,
+        photoURL: URL? = nil,
+        contentName: String,
+        fromThumbnail: Bool = false,
+        fromUpload: Bool = false
+    ) {
         let viewModel = CameraResultViewModel(
             coordinator: self,
             photo: photo,
             videoURL: video,
             photoURL: photoURL,
             contentName: contentName,
-            fromThumbnail: fromThumbnail
+            fromThumbnail: fromThumbnail,
+            fromUpload: fromUpload
         )
         pushHostingController(rootView: CameraResultView(viewModel: viewModel))
     }
     
-    func pushUploadContentView(contentName: String, photo: UIImage, photoURL: URL? = nil) {
+    func pushUploadContentView(
+        contentName: String,
+        photo: UIImage,
+        photoURL: URL? = nil,
+        isEdit: Bool = false
+    ) {
         let viewModel = UploadContentViewModel(
             coordinator: self,
             contentName: contentName,
             photo: photo,
-            photoURL: photoURL
+            photoURL: photoURL,
+            isEdit: isEdit
         )
         pushHostingController(rootView: UploadContentView(viewModel: viewModel))
     }

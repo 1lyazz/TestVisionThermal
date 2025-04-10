@@ -22,6 +22,8 @@ internal enum Strings {
   internal static let deleteAlertTitle = Strings.tr("Localizable", "deleteAlertTitle", fallback: "Do you really want to delete?")
   /// Delete
   internal static let deleteButtonTitle = Strings.tr("Localizable", "deleteButtonTitle", fallback: "Delete")
+  /// Edit
+  internal static let editButtonTitle = Strings.tr("Localizable", "editButtonTitle", fallback: "Edit")
   /// Go to settings
   internal static let goSettingsButtonTitle = Strings.tr("Localizable", "goSettingsButtonTitle", fallback: "Go to settings")
   /// History

@@ -85,7 +85,7 @@ extension HomeView {
                     .font(Fonts.SFProDisplay.regular.swiftUIFont(size: 15))
                     .foregroundStyle(.white)
                     .lineLimit(1)
-                    .padding(.leading, 2)
+                    .padding(.trailing, 3)
             }
         }
     }
@@ -125,7 +125,8 @@ extension HomeView {
                                 contentURL: item.url,
                                 width: 270,
                                 cellAction: { viewModel.tapOnHistoryCell(with: item) },
-                                deleteAction: { viewModel.tapOnDelete(item) }
+                                deleteAction: { viewModel.tapOnDelete(item) },
+                                editAction: { viewModel.tapOnEdit(item) }
                             )
                         }
                     }

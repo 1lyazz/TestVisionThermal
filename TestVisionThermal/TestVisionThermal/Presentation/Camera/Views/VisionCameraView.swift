@@ -12,7 +12,7 @@ struct VisionCameraView: View {
                 CameraView(cameraSessionManager: viewModel.cameraSessionManager, error: $viewModel.cameraError)
                     .blur(radius: viewModel.isChangeCameraState ? 10 : 0)
                     .opacity(viewModel.isCameraVisible ? 1 : 0)
-                    .gesture(
+                    .simultaneousGesture(
                         DragGesture()
                             .onEnded { value in
                                 let horizontalAmount = value.translation.width
@@ -23,8 +23,6 @@ struct VisionCameraView: View {
                                 }
                             }
                     )
-                
-                swipeView
             }
             
             VStack(spacing: 0) {
@@ -298,15 +296,5 @@ struct VisionCameraView: View {
             }
         }
         .padding(.horizontal, 40)
-    }
-    
-    private var swipeView: some View {
-        HStack {
-            Rectangle()
-                .frame(width: 45)
-                .foregroundStyle(.white.opacity(0.000001))
-            
-            Spacer()
-        }
     }
 }

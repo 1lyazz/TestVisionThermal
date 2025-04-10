@@ -13,6 +13,7 @@
 "continueButtonTitle" = "Continue";
 "proButtonTitle" = "PRO";
 "viewAllButtonTitle" = "View all";
+"editButtonTitle" = "Edit";
 
 // MARK: - Alerts
 
