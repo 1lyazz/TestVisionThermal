@@ -28,6 +28,8 @@ internal enum Strings {
   internal static let historyButtonTitle = Strings.tr("Localizable", "historyButtonTitle", fallback: "History")
   /// History
   internal static let historyTitle = Strings.tr("Localizable", "historyTitle", fallback: "History")
+  /// Your history will appear here
+  internal static let historyWillAppearTitle = Strings.tr("Localizable", "historyWillAppearTitle", fallback: "Your history will appear here")
   /// Home
   internal static let homeButtonTitle = Strings.tr("Localizable", "homeButtonTitle", fallback: "Home")
   /// Import from Photos
@@ -44,6 +46,8 @@ internal enum Strings {
   internal static let noPhotosAccessDescription = Strings.tr("Localizable", "noPhotosAccessDescription", fallback: "To save your photo, our app needs permission to access Photos.")
   /// No Photos Access
   internal static let noPhotosAccessTitle = Strings.tr("Localizable", "noPhotosAccessTitle", fallback: "No Photos Access")
+  /// No Photos Yet
+  internal static let noPhotosTitle = Strings.tr("Localizable", "noPhotosTitle", fallback: "No Photos Yet")
   /// OK
   internal static let okButtonTitle = Strings.tr("Localizable", "okButtonTitle", fallback: "OK")
   /// Photos

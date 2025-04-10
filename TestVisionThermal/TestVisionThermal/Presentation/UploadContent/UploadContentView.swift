@@ -49,6 +49,7 @@ struct UploadContentView: View {
         }
         .padding(.bottom, 8)
         .frame(height: 106)
+        .zIndex(2)
     }
     
     private var mediaContent: some View {

@@ -142,6 +142,7 @@ struct VisionCameraView: View {
                 HStack(spacing: 0) {
                     Image(uiImage: viewModel.contentThumbnail ?? .emptyThumbnail)
                         .resizable()
+                        .scaledToFill()
                         .frame(width: 40, height: 50)
                         .clipShape(RoundedRectangle(cornerRadius: 4))
                         .animation(.default, value: viewModel.contentThumbnail)

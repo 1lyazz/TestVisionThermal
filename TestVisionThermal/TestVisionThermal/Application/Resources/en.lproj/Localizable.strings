@@ -40,3 +40,5 @@
 "photosTitle" = "Photos";
 "takePhotoVideoTitle" = "Take photo or video";
 "importFromPhotoTitle" = "Import from Photos";
+"noPhotosTitle" = "No Photos Yet";
+"historyWillAppearTitle" = "Your history will appear here";

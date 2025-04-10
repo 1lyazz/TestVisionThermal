@@ -41,10 +41,10 @@ struct HomePanel: View {
         .padding(.vertical, 12)
         .padding(.leading, 12)
         .frame(width: 167.5)
-        .background(tabBarBackground)
+        .background(panelBackground)
     }
 
-    private var tabBarBackground: some View {
+    private var panelBackground: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 20)
                 .stroke(

@@ -1,3 +1,4 @@
+import AlertToast
 import PhotosUI
 import SwiftUI
 
@@ -9,19 +10,42 @@ struct HomeView: View {
             Color.black090909.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                MainHeader(title: UIApplication.shared.appName, subTitle: Strings.tapOnTransformTitle) {
-                    viewModel.tapOnProButton()
+                VStack(spacing: 0) {
+                    MainHeader(title: UIApplication.shared.appName, subTitle: Strings.tapOnTransformTitle) {
+                        viewModel.tapOnProButton()
+                    }
+                    .padding(.top, 14)
+                    .padding(.bottom, 16)
+
+                    homePanels
+
+                    historyListHeader
                 }
-                .padding(.top, 14)
-                .padding(.bottom, 16)
+                .padding(.horizontal, 16)
 
-                homePanels
-
-                historyListHeader
+                if viewModel.isLoading {
+                    AlertToast(
+                        displayMode: .alert,
+                        type: .loading,
+                        style: .style(
+                            backgroundColor: .clear
+                        )
+                    )
+                    .frame(height: 231)
+                } else {
+                    if !viewModel.mediaItems.isEmpty {
+                        historyList
+                    } else {
+                        EmptyView
+                    }
+                }
 
                 Spacer()
             }
-            .padding(.horizontal, 16)
+        }
+        .onAppear {
+            viewModel.isLoading = true
+            viewModel.loadMediaFiles()
         }
     }
 
@@ -66,6 +90,50 @@ struct HomeView: View {
                     .padding(.leading, 2)
             }
         }
-        .padding(.bottom, 12)
+        .padding(.bottom, 17)
+    }
+
+    private var historyList: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(alignment: .top, spacing: 8) {
+                ForEach(viewModel.mediaItems.chunked(into: 3), id: \.self) { column in
+                    VStack(spacing: 8) {
+                        ForEach(column, id: \.id) { item in
+                            HistoryCell(
+                                contentThumbnail: item.thumbnail,
+                                contentName: item.name,
+                                contentURL: item.url,
+                                width: 270,
+                                cellAction: { viewModel.tapOnHistoryCell(with: item) },
+                                deleteAction: { viewModel.tapOnDelete(item) }
+                            )
+                        }
+                    }
+                }
+            }
+            .padding(.leading, 16)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    private var EmptyView: some View {
+        VStack(spacing: 4) {
+            Image(.folderIcon)
+                .resizable()
+                .frame(width: 80, height: 80)
+
+            Text(Strings.noPhotosTitle)
+                .font(Fonts.SFProDisplay.bold.swiftUIFont(size: 22))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .multilineTextAlignment(.center)
+
+            Text(Strings.historyWillAppearTitle)
+                .font(Fonts.SFProDisplay.regular.swiftUIFont(size: 13))
+                .foregroundStyle(.gray9A9A9A)
+                .lineLimit(1)
+                .multilineTextAlignment(.center)
+        }
+        .frame(height: 231)
     }
 }
