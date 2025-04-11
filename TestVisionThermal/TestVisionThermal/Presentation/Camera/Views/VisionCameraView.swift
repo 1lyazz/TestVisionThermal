@@ -287,6 +287,7 @@ struct VisionCameraView: View {
                     .foregroundColor(.gray9A9A9A)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.8)
             }
             
             if viewModel.isOnSettingsButton {
@@ -295,6 +296,6 @@ struct VisionCameraView: View {
                 }
             }
         }
-        .padding(.horizontal, 40)
+        .padding(.horizontal, 52.5)
     }
 }

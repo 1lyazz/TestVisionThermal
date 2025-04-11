@@ -6,7 +6,7 @@
 "saveToPhotosButtonTitle" = "Save to Photos";
 "okButtonTitle" = "OK";
 "settingsButtonTitle" = "Settings";
-"goSettingsButtonTitle" = "Go to settings";
+"goSettingsButtonTitle" = "Go to Settings";
 "shareButtonTitle" = "Share";
 "deleteButtonTitle" = "Delete";
 "cancelButtonTitle" = "Cancel";
@@ -29,7 +29,7 @@
 
 "noPhotosAccessDescription" = "To save your photo, our app needs permission to access Photos.";
 "noMicrophoneDescription" = "To shoot video with audio, our app needs permission to access the iPhone Microphone.";
-"noCameraAccessDescription" = "To take photos and shoot videos with filters, our app needs permission to access the iPhone Camera.";
+"noCameraAccessDescription" = "To take photos and shoot videos with filters, our app needs permission to access the Camera";
 "wrongAccessDescription" = "Something went wrong :(";
 "deleteAlertDescription" = "This action cannot be reversed";
 

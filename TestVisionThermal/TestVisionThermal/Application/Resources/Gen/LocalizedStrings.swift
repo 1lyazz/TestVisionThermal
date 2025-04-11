@@ -28,8 +28,8 @@ internal enum Strings {
   internal static let editButtonTitle = Strings.tr("Localizable", "editButtonTitle", fallback: "Edit")
   /// Go to Camera
   internal static let goCameraButtonTitle = Strings.tr("Localizable", "goCameraButtonTitle", fallback: "Go to Camera")
-  /// Go to settings
-  internal static let goSettingsButtonTitle = Strings.tr("Localizable", "goSettingsButtonTitle", fallback: "Go to settings")
+  /// Go to Settings
+  internal static let goSettingsButtonTitle = Strings.tr("Localizable", "goSettingsButtonTitle", fallback: "Go to Settings")
   /// History
   internal static let historyButtonTitle = Strings.tr("Localizable", "historyButtonTitle", fallback: "History")
   /// History
@@ -40,8 +40,8 @@ internal enum Strings {
   internal static let homeButtonTitle = Strings.tr("Localizable", "homeButtonTitle", fallback: "Home")
   /// Import from Photos
   internal static let importFromPhotoTitle = Strings.tr("Localizable", "importFromPhotoTitle", fallback: "Import from Photos")
-  /// To take photos and shoot videos with filters, our app needs permission to access the iPhone Camera.
-  internal static let noCameraAccessDescription = Strings.tr("Localizable", "noCameraAccessDescription", fallback: "To take photos and shoot videos with filters, our app needs permission to access the iPhone Camera.")
+  /// To take photos and shoot videos with filters, our app needs permission to access the Camera
+  internal static let noCameraAccessDescription = Strings.tr("Localizable", "noCameraAccessDescription", fallback: "To take photos and shoot videos with filters, our app needs permission to access the Camera")
   /// No Camera Access
   internal static let noCameraAccessTitle = Strings.tr("Localizable", "noCameraAccessTitle", fallback: "No Camera Access")
   /// No Microphone Access

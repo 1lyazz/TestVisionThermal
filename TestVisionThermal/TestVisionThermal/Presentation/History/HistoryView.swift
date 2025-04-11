@@ -7,6 +7,17 @@ struct HistoryView: View {
     var body: some View {
         ZStack {
             Color.black090909.ignoresSafeArea()
+                .simultaneousGesture(
+                    DragGesture()
+                        .onEnded { value in
+                            let horizontalAmount = value.translation.width
+                            if horizontalAmount < -50 {
+                                viewModel.swipeLeftToNextFilter()
+                            } else if horizontalAmount > 50 {
+                                viewModel.swipeRightToPreviousFilter()
+                            }
+                        }
+                )
             
             VStack(spacing: 0) {
                 header
@@ -190,7 +201,18 @@ struct HistoryView: View {
             }
             .padding(.top, 12)
         }
-        .padding(.horizontal, 40)
+        .padding(.horizontal, 52.5)
         .padding(.top, viewModel.isSheetPresentation ? 37 : 78)
+        .simultaneousGesture(
+            DragGesture()
+                .onEnded { value in
+                    let horizontalAmount = value.translation.width
+                    if horizontalAmount < -50 {
+                        viewModel.swipeLeftToNextFilter()
+                    } else if horizontalAmount > 50 {
+                        viewModel.swipeRightToPreviousFilter()
+                    }
+                }
+        )
     }
 }

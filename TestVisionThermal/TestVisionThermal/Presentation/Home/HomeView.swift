@@ -158,8 +158,13 @@ extension HomeView {
                 .lineLimit(1)
                 .multilineTextAlignment(.center)
                 .padding(.top, 2)
+
+            MainButton(title: Strings.goCameraButtonTitle) {
+                viewModel.tapOnCameraButton()
+            }
+            .padding(.top, 12)
         }
-        .frame(height: 231)
-        .padding(.horizontal, 40)
+        .frame(height: 275)
+        .padding(.horizontal, 52.5)
     }
 }
