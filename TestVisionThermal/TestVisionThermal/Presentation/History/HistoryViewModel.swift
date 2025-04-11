@@ -108,7 +108,9 @@ extension HistoryViewModel {
               currentIndex < allFilters.count - 1
         else { return }
 
-        selectedFilter = allFilters[currentIndex + 1]
+        withAnimation {
+            selectedFilter = allFilters[currentIndex + 1]
+        }
     }
 
     func swipeRightToPreviousFilter() {
@@ -116,7 +118,9 @@ extension HistoryViewModel {
               currentIndex > 0
         else { return }
 
-        selectedFilter = allFilters[currentIndex - 1]
+        withAnimation {
+            selectedFilter = allFilters[currentIndex - 1]
+        }
     }
 }
 
