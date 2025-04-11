@@ -14,6 +14,9 @@ final class HistoryViewModel: ObservableObject {
 
     private let coordinator: Coordinator
     private let hapticGen = HapticGen.shared
+    private var allFilters: [HistoryFilterType] {
+        [.all] + CameraFilterType.allCases.map { HistoryFilterType.filter($0) }
+    }
 
     var filteredMediaItems: [MediaItem] {
         switch selectedFilter {
@@ -98,6 +101,22 @@ extension HistoryViewModel {
         }
 
         coordinator.pushUploadContentView(contentName: item.name, photo: item.thumbnail, photoURL: item.url, isEdit: true)
+    }
+
+    func swipeLeftToNextFilter() {
+        guard let currentIndex = allFilters.firstIndex(of: selectedFilter),
+              currentIndex < allFilters.count - 1
+        else { return }
+
+        selectedFilter = allFilters[currentIndex + 1]
+    }
+
+    func swipeRightToPreviousFilter() {
+        guard let currentIndex = allFilters.firstIndex(of: selectedFilter),
+              currentIndex > 0
+        else { return }
+
+        selectedFilter = allFilters[currentIndex - 1]
     }
 }
 

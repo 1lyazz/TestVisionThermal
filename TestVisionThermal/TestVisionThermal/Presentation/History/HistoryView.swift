@@ -109,6 +109,17 @@ struct HistoryView: View {
                     historyList
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                         .transition(.opacity)
+                        .simultaneousGesture(
+                            DragGesture()
+                                .onEnded { value in
+                                    let horizontalAmount = value.translation.width
+                                    if horizontalAmount < -50 {
+                                        viewModel.swipeLeftToNextFilter()
+                                    } else if horizontalAmount > 50 {
+                                        viewModel.swipeRightToPreviousFilter()
+                                    }
+                                }
+                        )
                 } else {
                     Spacer()
                 }
