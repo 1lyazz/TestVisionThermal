@@ -16,6 +16,8 @@ internal enum Strings {
   internal static let cameraTitle = Strings.tr("Localizable", "cameraTitle", fallback: "Camera")
   /// Cancel
   internal static let cancelButtonTitle = Strings.tr("Localizable", "cancelButtonTitle", fallback: "Cancel")
+  /// Contact Us
+  internal static let contactSettings = Strings.tr("Localizable", "contactSettings", fallback: "Contact Us")
   /// Continue
   internal static let continueButtonTitle = Strings.tr("Localizable", "continueButtonTitle", fallback: "Continue")
   /// This action cannot be reversed
@@ -40,6 +42,12 @@ internal enum Strings {
   internal static let homeButtonTitle = Strings.tr("Localizable", "homeButtonTitle", fallback: "Home")
   /// Import from Photos
   internal static let importFromPhotoTitle = Strings.tr("Localizable", "importFromPhotoTitle", fallback: "Import from Photos")
+  /// This iPhone does not have default Mail account setup. You can Setup Mail account or send an email manually to %@
+  internal static func mailUnavailableMessage(_ p1: Any) -> String {
+    return Strings.tr("Localizable", "mailUnavailableMessage", String(describing: p1), fallback: "This iPhone does not have default Mail account setup. You can Setup Mail account or send an email manually to %@")
+  }
+  /// Mail Unavailable
+  internal static let mailUnavailableTitle = Strings.tr("Localizable", "mailUnavailableTitle", fallback: "Mail Unavailable")
   /// To take photos and shoot videos with filters, our app needs permission to access the Camera
   internal static let noCameraAccessDescription = Strings.tr("Localizable", "noCameraAccessDescription", fallback: "To take photos and shoot videos with filters, our app needs permission to access the Camera")
   /// No Camera Access
@@ -58,8 +66,20 @@ internal enum Strings {
   internal static let okButtonTitle = Strings.tr("Localizable", "okButtonTitle", fallback: "OK")
   /// Photos
   internal static let photosTitle = Strings.tr("Localizable", "photosTitle", fallback: "Photos")
+  /// Privacy Policy
+  internal static let privacySettings = Strings.tr("Localizable", "privacySettings", fallback: "Privacy Policy")
+  /// Unlock Pro
+  internal static let proBannerButtonTitle = Strings.tr("Localizable", "proBannerButtonTitle", fallback: "Unlock Pro")
+  /// Unlimited access & Multiple filters
+  internal static let proBannerMessage = Strings.tr("Localizable", "proBannerMessage", fallback: "Unlimited access & Multiple filters")
+  /// Unlimited Access
+  internal static let proBannerTitle = Strings.tr("Localizable", "proBannerTitle", fallback: "Unlimited Access")
   /// PRO
   internal static let proButtonTitle = Strings.tr("Localizable", "proButtonTitle", fallback: "PRO")
+  /// Rate Us
+  internal static let rateSettings = Strings.tr("Localizable", "rateSettings", fallback: "Rate Us")
+  /// Restore
+  internal static let restoreSettings = Strings.tr("Localizable", "restoreSettings", fallback: "Restore")
   /// Saved Error
   internal static let savedErrorTitle = Strings.tr("Localizable", "savedErrorTitle", fallback: "Saved Error")
   /// Saved to Photos
@@ -70,12 +90,18 @@ internal enum Strings {
   internal static let settingsButtonTitle = Strings.tr("Localizable", "settingsButtonTitle", fallback: "Settings")
   /// Settings
   internal static let settingsTitle = Strings.tr("Localizable", "settingsTitle", fallback: "Settings")
+  /// Setup
+  internal static let setupButtonTitle = Strings.tr("Localizable", "setupButtonTitle", fallback: "Setup")
   /// Share
   internal static let shareButtonTitle = Strings.tr("Localizable", "shareButtonTitle", fallback: "Share")
+  /// Share App
+  internal static let shareSettings = Strings.tr("Localizable", "shareSettings", fallback: "Share App")
   /// Take photo or video
   internal static let takePhotoVideoTitle = Strings.tr("Localizable", "takePhotoVideoTitle", fallback: "Take photo or video")
   /// Tap to transform
   internal static let tapOnTransformTitle = Strings.tr("Localizable", "tapOnTransformTitle", fallback: "Tap to transform")
+  /// Terms of Use
+  internal static let termsSettings = Strings.tr("Localizable", "termsSettings", fallback: "Terms of Use")
   /// View all
   internal static let viewAllButtonTitle = Strings.tr("Localizable", "viewAllButtonTitle", fallback: "View all")
   /// Without Audio

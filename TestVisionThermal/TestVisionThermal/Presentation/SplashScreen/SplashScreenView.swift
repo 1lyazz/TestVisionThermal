@@ -9,9 +9,9 @@ struct SplashScreenView: View {
 
             TimelineView(.animation(minimumInterval: 0.6, paused: false)) { timeline in
                 ZStack {
-                    Image(.cameraIcon)
+                    Image(.appIconThumbnail)
                         .resizable()
-                        .frame(width: 150, height: 150)
+                        .frame(width: 90, height: 90)
                         .scaleEffect(viewModel.isSplashAnimation ? 1.1 : 1)
                 }
                 .onChange(of: timeline.date) { _ in

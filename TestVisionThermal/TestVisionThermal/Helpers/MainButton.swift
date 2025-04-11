@@ -2,7 +2,9 @@ import SwiftUI
 
 struct MainButton: View {
     let title: String
+    var titleColor: Color?
     var icon: ImageResource?
+    var buttonColor: Color?
     let action: () -> Void
 
     var body: some View {
@@ -16,7 +18,7 @@ struct MainButton: View {
 
                 Text(title)
                     .font(Fonts.SFProDisplay.semibold.swiftUIFont(size: 17))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(titleColor ?? .white)
             }
             .frame(height: 54)
             .frame(maxWidth: .infinity)
@@ -29,18 +31,20 @@ struct MainButton: View {
     private var mainButtonBackground: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 28)
-                .foregroundStyle(.primaryB827CE)
+                .foregroundStyle(buttonColor ?? .primaryB827CE)
 
-            RoundedRectangle(cornerRadius: 40)
-                .stroke(
-                    LinearGradient(
-                        colors: [.white.opacity(0.7), .purple540560],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: 5
-                )
-                .blur(radius: 6)
+            if buttonColor == nil {
+                RoundedRectangle(cornerRadius: 40)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.7), .purple540560],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 5
+                    )
+                    .blur(radius: 6)
+            }
         }
     }
 }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>appStoreURL</key>
+	<string>https://apps.apple.com/by/app/mail/id1108187098</string>
+	<key>mailAppURL</key>
+	<string>https://apps.apple.com/by/app/mail/id1108187098</string>
+	<key>privacyURL</key>
+	<string>https://www.apple.com</string>
+	<key>termsURL</key>
+	<string>https://www.apple.com</string>
+	<key>appMail</key>
+	<string>123321123@gmail.com</string>
+	<key>onboardingDone</key>
+	<string>onboardingComplete</string>
+	<key>mailShortCut</key>
+	<string>Unsubscribe</string>
+	<key>adaptyKey</key>
+	<string>adaptyKey</string>
+	<key>placementId</key>
+	<string>placementId</string>
+</dict>
+</plist>
