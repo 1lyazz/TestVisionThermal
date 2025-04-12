@@ -67,6 +67,10 @@ extension HistoryViewModel {
 
     func tapOnHistoryCell(with media: MediaItem) {
         hapticGen.setUpHaptic()
+        
+        if isSheetPresentation {
+            coordinator.dismissView()
+        }
 
         let fileExtension = media.url.pathExtension.lowercased()
         if fileExtension == "mov" || fileExtension == "mp4" {
